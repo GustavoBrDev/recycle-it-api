@@ -4,7 +4,6 @@ import com.ifsc.ctds.stinghen.recycle_it_api.enums.OtherMaterials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.OtherMaterial;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-
 public class OtherMaterialRequestDTO extends ProjectMaterialRequestDTO<OtherMaterial> {
 
     @NotBlank

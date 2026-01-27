@@ -7,14 +7,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 /**
  * DTO para solicitação de material de projeto.
  */
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -29,6 +27,5 @@ public abstract class ProjectMaterialRequestDTO<T> implements ConvertibleRequest
     @NotNull
     @Positive
     public Long quantity;
-
 
 }
