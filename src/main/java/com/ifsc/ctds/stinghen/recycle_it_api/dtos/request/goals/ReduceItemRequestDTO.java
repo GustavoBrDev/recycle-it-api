@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
+/**
+ * DTO para os "componentes" da meta de redução
+ */
 public class ReduceItemRequestDTO implements ConvertibleRequestDTO<ReduceItem> {
 
     @NotBlank
@@ -20,7 +23,8 @@ public class ReduceItemRequestDTO implements ConvertibleRequestDTO<ReduceItem> {
     public ReduceItem convert() {
         return ReduceItem.builder()
                 .type(this.type)
-                .quantity(this.quantity)
+                .targetQuantity(this.quantity)
+                .actualQuantity(this.quantity)
                 .build();
     }
 }

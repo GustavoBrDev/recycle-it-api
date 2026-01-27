@@ -1,4 +1,4 @@
-package com.ifsc.ctds.stinghen.recycle_it_api.models.pontutation;
+package com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation;
 
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;

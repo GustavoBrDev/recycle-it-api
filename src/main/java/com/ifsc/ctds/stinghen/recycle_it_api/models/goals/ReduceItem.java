@@ -23,15 +23,17 @@ public class ReduceItem implements IItem {
 
     private Materials type;
 
-    private int quantity;
+    private int targetQuantity;
+
+    private int actualQuantity;
 
     @Override
     public void increment() {
-        this.quantity++;
+        this.actualQuantity++;
     }
 
     @Override
     public void decrement() {
-        this.quantity--;
+        this.actualQuantity--;
     }
 }

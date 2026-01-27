@@ -1,6 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.league;
 
-import com.ifsc.ctds.stinghen.recycle_it_api.models.pontutation.Punctuation;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

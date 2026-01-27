@@ -3,7 +3,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.models.user;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.Goal;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.pontutation.Punctuation;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.purchase.PurchasedItem;
 import jakarta.persistence.Entity;

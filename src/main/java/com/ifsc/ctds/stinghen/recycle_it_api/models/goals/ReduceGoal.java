@@ -19,10 +19,7 @@ import java.util.List;
 public class ReduceGoal extends Goal {
 
     @OneToMany
-    private List<ReduceItem> estimatedItems;
-
-    @OneToMany
-    private List<ReduceItem> actualItems;
+    private List<ReduceItem> items;
 
     private int skipDaysLeft;
 }

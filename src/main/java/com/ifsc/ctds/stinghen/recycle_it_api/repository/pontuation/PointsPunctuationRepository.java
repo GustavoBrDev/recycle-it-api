@@ -1,6 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.repository.pontuation;
 
-import com.ifsc.ctds.stinghen.recycle_it_api.models.pontutation.PointsPunctuation;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
