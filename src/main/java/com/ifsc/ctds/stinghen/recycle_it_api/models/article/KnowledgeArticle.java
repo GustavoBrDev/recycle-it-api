@@ -20,7 +20,7 @@ public class KnowledgeArticle extends Article {
 
     private String text;
 
-    private List<String> references;
+    private List<String> article_references;
 
     @Override
     public void onFinish(User user) {

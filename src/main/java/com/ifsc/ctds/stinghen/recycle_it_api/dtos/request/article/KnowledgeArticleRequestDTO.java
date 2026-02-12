@@ -26,7 +26,7 @@ public class KnowledgeArticleRequestDTO extends ArticleRequestDTO<KnowledgeArtic
                 .description(super.description)
                 .minimumTime(super.minimumTime)
                 .text(this.text)
-                .references(this.references)
+                .article_references(this.references)
                 .build();
     }
 }

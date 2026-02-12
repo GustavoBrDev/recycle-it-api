@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface LeagueSessionRepository extends JpaRepository<LeagueSession, Long> {
 
-    Page<LeagueSession> findAllOrderByEndDate (Pageable pageable);
+    Page<LeagueSession> findAllByOrderByEndDate (Pageable pageable);
 
     Page<LeagueSession> findByUsers_IdOrderByEndDate (Long userId, Pageable pageable);
 }
