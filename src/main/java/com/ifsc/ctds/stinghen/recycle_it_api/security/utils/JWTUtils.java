@@ -1,0 +1,65 @@
+package com.ifsc.ctds.stinghen.recycle_it_api.security.utils;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
+
+public class JWTUtils {
+
+    @Value("${jwt.password}")
+    private String PASSWORD;
+
+    @Value("${jwt.issuer}")
+    private String issuer;
+
+    public String generateToken(UserDetails userDetails) {
+        Algorithm algorithm = Algorithm.HMAC256(issuer);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        System.out.println(roles);
+
+        return JWT.create()
+                .withIssuer("$TOKEN") // Emissor do token
+                .withIssuedAt(creationInstant()) // Data de emissão
+                .withExpiresAt(expirationInstant()) // Data de expiração
+                .withSubject(userDetails.getUsername())
+                .withClaim("roles", roles) // Adicionando os roles
+                .sign(algorithm);
+    }
+    public Instant expirationInstant() {
+
+        return ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).plusMinutes(30).toInstant();
+    }
+
+    private Instant creationInstant ( ){
+
+        return ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).toInstant();
+    }
+
+    public void validateToken(String token) {
+        Algorithm algorithm = Algorithm.HMAC256(PASSWORD);
+        DecodedJWT decodedJWT = JWT.decode(token);
+        algorithm.verify(decodedJWT);
+
+        if (decodedJWT.getExpiresAt().toInstant().isBefore( creationInstant()) ) {
+            throw new TokenExpiredException("Token expirado", decodedJWT.getExpiresAt().toInstant());
+        }
+    }
+
+    public String getUsernameFromToken(String token) {
+        return JWT.decode(token).getSubject();
+    }
+}
