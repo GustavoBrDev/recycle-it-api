@@ -25,8 +25,8 @@ import java.io.IOException;
 @AllArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
-    private final CookieUtils cookieUtils = new CookieUtils();
-    private final JWTUtils jwtUtils = new JWTUtils();
+    private final CookieUtils cookieUtils;
+    private final JWTUtils jwtUtils;
 
     private AuthenticationService authService;
 

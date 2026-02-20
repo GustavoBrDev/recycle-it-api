@@ -13,7 +13,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JWTUtils {
 
     @Value("${jwt.password}")
@@ -23,7 +25,7 @@ public class JWTUtils {
     private String issuer;
 
     public String generateToken(UserDetails userDetails) {
-        Algorithm algorithm = Algorithm.HMAC256(issuer);
+        Algorithm algorithm = Algorithm.HMAC256(PASSWORD);
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -32,7 +34,7 @@ public class JWTUtils {
         System.out.println(roles);
 
         return JWT.create()
-                .withIssuer("$TOKEN") // Emissor do token
+                .withIssuer(issuer) // Emissor do token
                 .withIssuedAt(creationInstant()) // Data de emissão
                 .withExpiresAt(expirationInstant()) // Data de expiração
                 .withSubject(userDetails.getUsername())

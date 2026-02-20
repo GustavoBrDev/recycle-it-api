@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @AllArgsConstructor
-@NoArgsConstructor
 @SuperBuilder
 public class PurchasableSkipCommentResponseDTO extends PurchasableItemResponseDTO {
 
