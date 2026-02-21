@@ -11,4 +11,9 @@ import lombok.experimental.SuperBuilder;
 public class FullRecycledMaterialResponseDTO extends FullProjectMaterialResponseDTO {
 
     public RecycledMaterial type;
+
+    public FullRecycledMaterialResponseDTO(com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial material) {
+        super(material);
+        this.type = material;
+    }
 }

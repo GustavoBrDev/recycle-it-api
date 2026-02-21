@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.punctuation;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,5 +25,15 @@ public class PointsPunctuationResponseDTO extends PunctuationResponseDTO {
     public Long knowledgePoints;
 
     public Long totalPoints;
+
+    public PointsPunctuationResponseDTO(PointsPunctuation punctuation) {
+        this.id = punctuation.getId();
+        this.lastUpdated = punctuation.getLastUpdated();
+        this.reducePoints = punctuation.getReducePoints();
+        this.recyclePoints = punctuation.getRecyclePoints();
+        this.reusePoints = punctuation.getReusePoints();
+        this.knowledgePoints = punctuation.getKnowledgePoints();
+        this.totalPoints = punctuation.calculateTotal();
+    }
 
 }

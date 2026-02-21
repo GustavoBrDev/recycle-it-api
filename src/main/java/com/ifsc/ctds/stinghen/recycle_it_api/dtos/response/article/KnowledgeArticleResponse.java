@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.article;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -19,4 +20,10 @@ public class KnowledgeArticleResponse extends ArticleResponseDTO {
     public String text;
 
     public List<String> references;
+
+    public KnowledgeArticleResponse(KnowledgeArticle article) {
+        super(article);
+        this.text = article.getText();
+        this.references = article.getArticle_references();
+    }
 }

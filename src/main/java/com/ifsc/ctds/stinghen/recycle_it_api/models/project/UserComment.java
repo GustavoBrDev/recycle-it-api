@@ -26,6 +26,4 @@ public class UserComment {
     private String text;
 
     private LocalDateTime date;
-
-
 }

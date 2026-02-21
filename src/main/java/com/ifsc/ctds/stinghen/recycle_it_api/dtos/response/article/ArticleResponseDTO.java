@@ -1,6 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.article;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -22,4 +23,11 @@ public abstract class ArticleResponseDTO implements ResponseDTO {
     public String description;
 
     public Duration minimumTime;
+
+    public ArticleResponseDTO(Article article) {
+        this.id = article.getId();
+        this.title = article.getTitle();
+        this.description = article.getDescription();
+        this.minimumTime = article.getMinimumTime();
+    }
 }
