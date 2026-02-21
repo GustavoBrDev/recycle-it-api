@@ -34,14 +34,6 @@ public class SecurityController {
 
         if (auth.isAuthenticated()) {
 
-            /*
-
-            Mantem a sessão salva no servidor
-
-            SecurityContext context = SecurityContextHolder.getContext();
-            context.setAuthentication(auth);
-            securityContextRepository.saveContext(context, request, response);*/
-
             // Uso do JWT
             String token = jwtUtils.generateToken((UserDetails) auth.getPrincipal());
 
