@@ -6,6 +6,9 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
@@ -13,12 +16,22 @@ import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserReposito
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.BadRequestException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Service para os métodos específicos do usuário padrão (regular)
+ * @author Gustavo Stinghen
+ * @see RegularUser
+ * @see User
+ * @see PasswordEncoder
+ * @since 22/02/2026
  */
 @AllArgsConstructor
 @Service
@@ -66,7 +79,7 @@ public class RegularUserService {
 
         user.setName(requestDTO.name);
         user.setCurrentAvatar(requestDTO.avatar);
-        user.getCredential().setPassword(requestDTO.password);
+        user.getCredential().setPassword( passwordEncoder.encode(user.getCredential().getPassword()));
 
         repository.save(user);
 
@@ -75,6 +88,230 @@ public class RegularUserService {
                 .isAlert(false)
                 .isError(false)
                 .build();
+    }
+
+    /**
+     * Atualiza o avatar de um usuário
+     * @param id o id do usuário
+     * @param avatar o novo avatar
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editAvatar (Long id, Avatar avatar ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setCurrentAvatar(avatar);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+    }
+
+    /**
+     * Atualiza o nome de um usuário
+     * @param id o id do usuário
+     * @param name o novo nome
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editName (Long id, String name){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setName(name);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+    }
+
+    /**
+     * Atualiza a senha de um usuário
+     * @param id o id do usuário
+     * @param password a nova senha
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editPassword (Long id, String password){
+
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.getCredential().setPassword(passwordEncoder.encode(password));
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+
+    }
+
+    /**
+     * Atualiza o email de um usuário
+     * @param id o id do usuário
+     * @param email o novo email
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editEmail (Long id, String email){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.getCredential().setEmail(email);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+
+    }
+
+    /**
+     * Atualiza a quantidade de recycle gems de um usuário
+     * @param id o id do usuário
+     * @param gems a nova quantidade de recycle gems
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editGems ( Long id, Long gems ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setRecycleGems(gems);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+    }
+
+    /**
+     * Incrementa a quantidade de recyle gems de um usuário
+     * @param id o id do usuário
+     * @param amount a quantidade de recyle gems a ser incrementada
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO incrementGems ( Long id, Long amount ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setRecycleGems(user.getRecycleGems() + amount);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+    }
+
+
+    /**
+     * Decrementa a quantidade de recyle gems de um usuário
+     * @param id o id do usuário
+     * @param amount a quantidade de recyle gems a ser removida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     * @throws BadValueException quando o usuário não tiver saldo suficiente
+     */
+    @Transactional
+    public ResponseDTO decrementGems ( Long id, Long amount ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+
+
+            if ( user.getRecycleGems() < amount ){
+                user.setRecycleGems(0L);
+
+                throw new BadValueException("Usuário não tem saldo suficiente");
+            }else{
+                user.setRecycleGems(user.getRecycleGems() - amount);
+            }
+
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+    }
+
+    /**
+     * Atualiza a liga atual de um usuário
+     * @param id o id do usuário
+     * @param league a nova liga
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editLeague ( Long id, League league ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setActualLeague(league);
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+
     }
 
     /**
@@ -171,6 +408,60 @@ public class RegularUserService {
         throw new NotFoundException("Usuário não encontrado com o e-mail " + email );
     }
 
+    /**
+     * Obtém todos os usuários
+     * @return lista de usuários em forma de {@link RegularUser}
+     */
+    @Transactional (readOnly = true)
+    public List<RegularUser> getAll (){
+        return repository.findAll();
+    }
 
+    /**
+     * Obtém todos os usuários de forma simplificada
+     * @return lista de usuários em forma de {@link SimpleUserResponseDTO}
+     */
+    @Transactional (readOnly = true)
+    public List<SimpleUserResponseDTO> getAllSimple (){
+        return repository.findAll().stream().map(SimpleUserResponseDTO::new).toList();
+    }
 
+    /**
+     * Obtém todos os usuários de forma completa
+     * @return lista de usuários em forma de {@link FullUserResponseDTO}
+     */
+    @Transactional (readOnly = true)
+    public List<FullUserResponseDTO> getAllFull (){
+        return repository.findAll().stream().map(FullUserResponseDTO::new).toList();
+    }
+
+    /**
+     * Obtém todos os usuários de forma paginada
+     * @param pageable as configurações de paginação
+     * @return página de usuários em forma de {@link RegularUser} utilizando paginação {@link Page}
+     */
+    @Transactional (readOnly = true)
+    public Page<RegularUser> getAll (Pageable pageable){
+        return repository.findAll(pageable);
+    }
+
+    /**
+     * Obtém todos os usuários de forma simplificada e paginada
+     * @param pageable as configurações de paginação
+     * @return página de usuários em forma de {@link SimpleUserResponseDTO} utilizando paginação {@link Page}
+     */
+    @Transactional (readOnly = true)
+    public Page<SimpleUserResponseDTO> getAllSimple ( Pageable pageable ){
+        return repository.findAll(pageable).map(SimpleUserResponseDTO::new);
+    }
+
+    /**
+     * Obtém todos os usuários de forma completa e paginada
+     * @param pageable as configurações de paginação
+     * @return página de usuários em forma de {@link FullUserResponseDTO} utilizando paginação {@link Page}
+     */
+    @Transactional (readOnly = true)
+    public Page<FullUserResponseDTO> getAllFull ( Pageable pageable ){
+        return repository.findAll(pageable).map(FullUserResponseDTO::new);
+    }
 }
