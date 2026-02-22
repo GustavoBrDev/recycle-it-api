@@ -7,16 +7,15 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
-import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -463,5 +462,53 @@ public class RegularUserService {
     @Transactional (readOnly = true)
     public Page<FullUserResponseDTO> getAllFull ( Pageable pageable ){
         return repository.findAll(pageable).map(FullUserResponseDTO::new);
+    }
+
+    /**
+     * Deleta o usuário com base em seu ID
+     * @param id o id do usuário a ser deletado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO deleteById ( Long id ){
+
+        if ( repository.existsById(id) ){
+            repository.deleteById(id);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário deletado")
+                    .content("O usuário com o ID " + id + " foi removido do banco de dados")
+                    .isAlert(true)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com o ID " + id );
+    }
+
+    /**
+     * Deleta o usuário com base em seu email
+     * @param email o e-mail do usuário a ser deletado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO deleteByEmail ( String email ){
+
+        if ( credentialsRepository.existsByEmail(email) ){
+
+            User user = credentialsRepository.findByEmail(email).get().getUser();
+            repository.deleteById(user.getId());
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário deletado")
+                    .content("O usuário com o e-mail " + email + " foi removido do banco de dados")
+                    .isAlert(true)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com o e-mail " + email );
     }
 }

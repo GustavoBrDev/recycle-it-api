@@ -1,7 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.league;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.league.LeagueSession;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

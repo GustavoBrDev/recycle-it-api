@@ -1,6 +1,5 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.league;
 
-import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +21,7 @@ public class LeagueSession implements ILeagueSession{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
     private League league;
 
     @OneToMany

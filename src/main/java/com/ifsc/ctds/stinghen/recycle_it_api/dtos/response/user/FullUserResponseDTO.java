@@ -3,7 +3,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.punctuation.PunctuationResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
-import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
