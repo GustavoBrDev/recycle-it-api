@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,9 @@ public abstract class Punctuation implements IPunctuation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    public User user;
 
     private LocalDateTime lastUpdated;
 }

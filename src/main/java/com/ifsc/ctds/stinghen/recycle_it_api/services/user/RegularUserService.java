@@ -8,12 +8,14 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponse
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,7 @@ public class RegularUserService {
     public RegularUserRepository repository;
     public UserCredentialsRepository credentialsRepository;
     public PasswordEncoder passwordEncoder;
+    public LeagueService leagueService;
 
     /**
      * Cria/persiste o registro de um usuário no banco de dados
@@ -287,19 +290,19 @@ public class RegularUserService {
     }
 
     /**
-     * Atualiza a liga atual de um usuário
+     * Atualiza a liga atual de um usuário pelo ID
      * @param id o id do usuário
-     * @param league a nova liga
+     * @param leagueId o id da nova liga
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando o usuário não for encontrado
      */
     @Transactional
-    public ResponseDTO editLeague ( Long id, League league ){
+    public ResponseDTO editLeagueById ( Long id, Long leagueId ){
 
         if ( repository.existsById(id) ){
 
             RegularUser user = repository.findById(id).get();
-            user.setActualLeague(league);
+            user.setActualLeague(leagueService.getObjectById(leagueId));
             repository.save(user);
 
             return FeedbackResponseDTO.builder()
@@ -311,6 +314,89 @@ public class RegularUserService {
 
         throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
 
+    }
+
+    /**
+     * Atualiza a liga atual de um usuário pelo tier
+     * @param id o id do usuário
+     * @param tier o tier da nova liga
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editLeagueByTier ( Long id, int tier ){
+
+        if ( repository.existsById(id) ){
+
+            RegularUser user = repository.findById(id).get();
+            user.setActualLeague(leagueService.getObjectByTier(tier));
+            repository.save(user);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Usuário atualizado com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
+
+    }
+
+    /**
+     * Adiciona um usuário como amigo
+     * @param userId o usuário base
+     * @param friendId o usuário a ser adicionado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso um dos usuários não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO addFriend ( Long userId, Long friendId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        RegularUser friend = repository.findById(friendId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + friendId));
+
+        user.addFriend(friend);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Novo Amigo")
+                .content("A nova amizade foi registrada corretamente")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Remove um usuário como amigo
+     * @param userId o usuário base
+     * @param friendId o usuário a ser removido
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso um dos usuários não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO removeFriend ( Long userId, Long friendId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        RegularUser friend = repository.findById(friendId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + friendId));
+
+        user.removeFriend(friend);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Usuário Removido")
+                .content("O usuário foi removido da lista de amizades")
+                .isAlert(false)
+                .isError(false)
+                .build();
     }
 
     /**
