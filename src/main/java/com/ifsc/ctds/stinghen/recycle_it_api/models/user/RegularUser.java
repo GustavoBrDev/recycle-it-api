@@ -89,4 +89,32 @@ public class RegularUser extends User{
         this.friends.remove(friend);
         friend.friends.remove(this);
     }
+
+    /**
+     * Adiciona um projeto a lista de projetos em andamento
+     * @param project o projeto a ser adicionado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void addProject (Project project) {
+
+        if (this.projects.contains(project)) {
+            throw new InvalidRelationshipException("O projeto já está em andamento");
+        }
+
+        this.projects.add(project);
+    }
+
+    /**
+     * Remove um projeto da lista de projetos em andamento
+     * @param project o projeto a ser removido
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void removeProject (Project project) {
+
+        if (! this.projects.contains(project)) {
+            throw new InvalidRelationshipException("O projeto não está em andamento");
+        }
+
+        this.projects.remove(project);
+    }
 }

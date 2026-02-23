@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -29,14 +30,23 @@ public class FriendRequestService {
 
     public FriendRequestRepository repository;
     public UserCredentialsRepository credentialsRepository;
+    public RegularUserService regularUserService;
 
     /**
      * Cria/persiste o registro de uma solicitação de amizade no banco de dados
-     * @param friendRequest a solicitação de amizade a ser criada
+     * @param email o e-mail do usuário que realizou a solicitação
+     * @param targetId o id do usuário que será adicionado como amigo (alvo da solicitação)
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      */
     @Transactional
-    public ResponseDTO create(FriendRequest friendRequest) {
+    public ResponseDTO create(String email, Long targetId) {
+
+        FriendRequest friendRequest = FriendRequest.builder()
+                .target( regularUserService.getObjectById(targetId) )
+                .sender(regularUserService.getObjectByEmail(email) )
+                .sendDate( LocalDateTime.now(ZoneId.of("America/Sao_Paulo")) )
+                .build();
+
         repository.save(friendRequest);
 
         return FeedbackResponseDTO.builder()

@@ -10,12 +10,14 @@ import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.project.ProjectService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,7 @@ public class RegularUserService {
     public UserCredentialsRepository credentialsRepository;
     public PasswordEncoder passwordEncoder;
     public LeagueService leagueService;
+    public ProjectService projectService;
 
     /**
      * Cria/persiste o registro de um usuário no banco de dados
@@ -345,8 +348,8 @@ public class RegularUserService {
 
     /**
      * Adiciona um usuário como amigo
-     * @param userId o usuário base
-     * @param friendId o usuário a ser adicionado
+     * @param userId o ID do usuário base
+     * @param friendId o ID do usuário a ser adicionado
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException caso um dos usuários não seja encontrado
      * @throws InvalidRelationshipException caso a relação seja inválida
@@ -373,8 +376,8 @@ public class RegularUserService {
 
     /**
      * Remove um usuário como amigo
-     * @param userId o usuário base
-     * @param friendId o usuário a ser removido
+     * @param userId o ID do usuário base
+     * @param friendId o ID do usuário a ser removido
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException caso um dos usuários não seja encontrado
      * @throws InvalidRelationshipException caso a relação seja inválida
@@ -394,6 +397,60 @@ public class RegularUserService {
         return FeedbackResponseDTO.builder()
                 .mainMessage("Usuário Removido")
                 .content("O usuário foi removido da lista de amizades")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Marca um projeto como em andamento
+     * @param userId o ID do usuário base
+     * @param projectId o ID do projeto a ser adicionado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso o usuário ou o projeto não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO addProject ( Long userId, Long projectId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        Project project = projectService.getObjectById(projectId);
+
+        user.addProject(project);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Projeto Iniciado")
+                .content("O projeto foi adicionado á lista de projetos em andamento")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Desmarca um projeto como em andamento
+     * @param userId o ID do usuário base
+     * @param projectId o ID do projeto a ser removido
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso o usuário ou o projeto não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO removeProject ( Long userId, Long projectId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        Project project = projectService.getObjectById(projectId);
+
+        user.removeProject(project);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Projeto Removido")
+                .content("O projeto foi removido da lista de projetos em andamento")
                 .isAlert(false)
                 .isError(false)
                 .build();
