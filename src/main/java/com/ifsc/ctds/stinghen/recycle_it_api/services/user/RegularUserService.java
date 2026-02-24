@@ -276,7 +276,7 @@ public class RegularUserService {
 
             if ( user.getRecycleGems() < amount ){
                 user.setRecycleGems(0L);
-
+                repository.save(user);
                 throw new BadValueException("Usuário não tem saldo suficiente");
             }else{
                 user.setRecycleGems(user.getRecycleGems() - amount);

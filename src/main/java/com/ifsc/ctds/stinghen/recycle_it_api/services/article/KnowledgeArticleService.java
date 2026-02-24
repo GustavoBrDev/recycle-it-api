@@ -11,7 +11,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.article.KnowledgeArticleRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
-import com.ifsc.ctds.stinghen.recycle_it_api.specifications.article.KnowledgeArticleSpecification;
+import com.ifsc.ctds.stinghen.recycle_it_api.specifications.KnowledgeArticleSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

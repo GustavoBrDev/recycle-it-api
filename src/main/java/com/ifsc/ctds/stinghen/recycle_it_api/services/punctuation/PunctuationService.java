@@ -27,31 +27,6 @@ public class PunctuationService {
     public PunctuationRepository repository;
 
     /**
-     * Atualiza uma pontuação existente
-     * @param id o id da pontuação
-     * @param punctuation a pontuação com os dados atualizados
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando a pontuação não for encontrada
-     */
-    @Transactional
-    public ResponseDTO update(Long id, Punctuation punctuation) {
-        Punctuation existingPunctuation = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Pontuação não encontrada com id: " + id
-                ));
-
-        existingPunctuation.setLastUpdated(punctuation.getLastUpdated());
-
-        repository.save(existingPunctuation);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Pontuação atualizada com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
      * Atualiza a última atualização de uma pontuação
      * @param id o id da pontuação
      * @param lastUpdated a nova data de última atualização

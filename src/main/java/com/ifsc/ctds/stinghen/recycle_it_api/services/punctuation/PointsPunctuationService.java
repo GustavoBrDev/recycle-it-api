@@ -2,6 +2,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.pontuation.PointsPunctuationRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -73,14 +74,20 @@ public class PointsPunctuationService {
     /**
      * Atualiza os pontos de redução de uma pontuação por pontos
      * @param id o id da pontuação por pontos
-     * @param reducePoints os novos pontos de redução
+     * @param reducePoints os novos pontos de redução (não pode ser negativo)
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     * @throws BadValueException quando o valor for negativo
      */
     @Transactional
     public ResponseDTO editReducePoints(Long id, Long reducePoints) {
         if (repository.existsById(id)) {
             PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (reducePoints < 0) {
+                throw new BadValueException("O valor de pontos de redução não pode ser negativo");
+            }
+            
             pointsPunctuation.setReducePoints(reducePoints);
             repository.save(pointsPunctuation);
 
@@ -97,14 +104,20 @@ public class PointsPunctuationService {
     /**
      * Atualiza os pontos de reciclagem de uma pontuação por pontos
      * @param id o id da pontuação por pontos
-     * @param recyclePoints os novos pontos de reciclagem
+     * @param recyclePoints os novos pontos de reciclagem (não pode ser negativo)
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     * @throws BadValueException quando o valor for negativo
      */
     @Transactional
     public ResponseDTO editRecyclePoints(Long id, Long recyclePoints) {
         if (repository.existsById(id)) {
             PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (recyclePoints < 0) {
+                throw new BadValueException("O valor de pontos de reciclagem não pode ser negativo");
+            }
+            
             pointsPunctuation.setRecyclePoints(recyclePoints);
             repository.save(pointsPunctuation);
 
@@ -121,14 +134,20 @@ public class PointsPunctuationService {
     /**
      * Atualiza os pontos de reuso de uma pontuação por pontos
      * @param id o id da pontuação por pontos
-     * @param reusePoints os novos pontos de reuso
+     * @param reusePoints os novos pontos de reuso (não pode ser negativo)
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     * @throws BadValueException quando o valor for negativo
      */
     @Transactional
     public ResponseDTO editReusePoints(Long id, Long reusePoints) {
         if (repository.existsById(id)) {
             PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (reusePoints < 0) {
+                throw new BadValueException("O valor de pontos de reuso não pode ser negativo");
+            }
+            
             pointsPunctuation.setReusePoints(reusePoints);
             repository.save(pointsPunctuation);
 
@@ -145,14 +164,20 @@ public class PointsPunctuationService {
     /**
      * Atualiza os pontos de conhecimento de uma pontuação por pontos
      * @param id o id da pontuação por pontos
-     * @param knowledgePoints os novos pontos de conhecimento
+     * @param knowledgePoints os novos pontos de conhecimento (não pode ser negativo)
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     * @throws BadValueException quando o valor for negativo
      */
     @Transactional
     public ResponseDTO editKnowledgePoints(Long id, Long knowledgePoints) {
         if (repository.existsById(id)) {
             PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (knowledgePoints < 0) {
+                throw new BadValueException("O valor de pontos de conhecimento não pode ser negativo");
+            }
+            
             pointsPunctuation.setKnowledgePoints(knowledgePoints);
             repository.save(pointsPunctuation);
 
@@ -216,4 +241,229 @@ public class PointsPunctuationService {
 
         throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
     }
+
+    /**
+     * Incrementa os pontos de reciclagem de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser incrementada
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO incrementRecyclePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            pointsPunctuation.setRecyclePoints(pointsPunctuation.getRecyclePoints() + amount);
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Decrementa os pontos de reciclagem de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser removida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO decrementRecyclePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (pointsPunctuation.getRecyclePoints() < amount) {
+                pointsPunctuation.setRecyclePoints(0L);
+                repository.save(pointsPunctuation);
+                throw new BadValueException("A pontuação por pontos não tem saldo suficiente");
+            } else {
+                pointsPunctuation.setRecyclePoints(pointsPunctuation.getRecyclePoints() - amount);
+            }
+            
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Incrementa os pontos de reuso de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser incrementada
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO incrementReusePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            pointsPunctuation.setReusePoints(pointsPunctuation.getReusePoints() + amount);
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Decrementa os pontos de reuso de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser removida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO decrementReusePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (pointsPunctuation.getReusePoints() < amount) {
+                pointsPunctuation.setReusePoints(0L);
+                repository.save(pointsPunctuation);
+                throw new BadValueException("A pontuação por pontos não tem saldo suficiente");
+            } else {
+                pointsPunctuation.setReusePoints(pointsPunctuation.getReusePoints() - amount);
+            }
+            
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Incrementa os pontos de conhecimento de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser incrementada
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO incrementKnowledgePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            pointsPunctuation.setKnowledgePoints(pointsPunctuation.getKnowledgePoints() + amount);
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Decrementa os pontos de conhecimento de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser removida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO decrementKnowledgePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (pointsPunctuation.getKnowledgePoints() < amount) {
+                pointsPunctuation.setKnowledgePoints(0L);
+                repository.save(pointsPunctuation);
+                throw new BadValueException("A pontuação por pontos não tem saldo suficiente");
+            } else {
+                pointsPunctuation.setKnowledgePoints(pointsPunctuation.getKnowledgePoints() - amount);
+            }
+            
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Incrementa os pontos de redução de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser incrementada
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO incrementReducePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            pointsPunctuation.setReducePoints(pointsPunctuation.getReducePoints() + amount);
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
+    /**
+     * Decrementa os pontos de redução de uma pontuação por pontos
+     * @param id o id da pontuação por pontos
+     * @param amount a quantidade de pontos a ser removida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a pontuação por pontos não for encontrada
+     */
+    @Transactional
+    public ResponseDTO decrementReducePoints(Long id, Long amount) {
+        if (repository.existsById(id)) {
+            PointsPunctuation pointsPunctuation = repository.findById(id).get();
+            
+            if (pointsPunctuation.getReducePoints() < amount) {
+                pointsPunctuation.setReducePoints(0L);
+                repository.save(pointsPunctuation);
+                throw new BadValueException("A pontuação por pontos não tem saldo suficiente");
+            } else {
+                pointsPunctuation.setReducePoints(pointsPunctuation.getReducePoints() - amount);
+            }
+            
+            repository.save(pointsPunctuation);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Pontuação por pontos atualizada com sucesso")
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Pontuação por pontos não encontrada com o ID " + id);
+    }
+
 }

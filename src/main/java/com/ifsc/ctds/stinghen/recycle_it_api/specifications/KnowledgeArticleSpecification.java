@@ -1,4 +1,4 @@
-package com.ifsc.ctds.stinghen.recycle_it_api.specifications.article;
+package com.ifsc.ctds.stinghen.recycle_it_api.specifications;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import jakarta.persistence.criteria.Predicate;
