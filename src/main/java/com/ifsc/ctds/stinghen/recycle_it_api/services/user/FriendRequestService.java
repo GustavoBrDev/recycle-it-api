@@ -7,6 +7,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.DeniedRequestException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.FriendRequestRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
@@ -183,6 +184,34 @@ public class FriendRequestService {
     }
 
     /**
+     * Cancela a solicitação de amizade
+     * @param userId o id do usário alvo da solicitação
+     * @param email o e-mail do usuário que realizou o cancelamento
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws DeniedRequestException quando a solicitação de amizade não lhe pertence
+     * @throws EntityNotFoundException quando a solicitação de amizade não for encontrada
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO cancel (Long userId, String email) {
+
+        FriendRequest friendRequest = this.getByTargetIdAndSenderEmail(userId, email);
+
+        if ( ! friendRequest.getTarget().getCredential().getEmail().equals(email) ) {
+            throw new DeniedRequestException("A solicitação em questão não lhe pertence");
+        }
+
+        deleteById(friendRequest.getId());
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Solicitação de amizade cancelada com sucesso")
+                .content("O usuário não verá mais sua solicitação")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
      * Obtem o objeto de FriendRequest pelo id fornecido
      * @param id o id a ser buscado
      * @return a solicitação de amizade em forma de {@link FriendRequest}
@@ -269,6 +298,22 @@ public class FriendRequestService {
         }
 
         throw new NotFoundException("Usuário não encontrado com o e-mail " + senderEmail);
+    }
+
+    /**
+     * Obtém solicitação de amizade por ID do destinatário e email do remetente
+     * @param targetId o ID do usuário destinatário
+     * @param senderEmail o email do usuário remetente
+     * @return a solicitação de amizade em forma de {@link FriendRequest}
+     * @throws NotFoundException quando o usuário não for encontrado ou a solicitação não existir
+     */
+    @Transactional(readOnly = true)
+    public FriendRequest getByTargetIdAndSenderEmail(Long targetId, String senderEmail) {
+        if (regularUserService.existsById(targetId) && regularUserService.existsByEmail(senderEmail)) {
+            return repository.findByTargetIdAndSender_Credential_Email(targetId, senderEmail);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId + " ou e-mail " + senderEmail);
     }
 
     /**

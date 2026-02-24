@@ -26,6 +26,8 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     List<FriendRequest> findBySender_Credential_Email(String senderEmail);
     Page<FriendRequest> findBySender_Credential_Email(String senderEmail, Pageable pageable);
     
+    FriendRequest findByTargetIdAndSender_Credential_Email(Long targetId, String senderEmail);
+    
     boolean existsByTargetId(Long targetId);
     boolean existsBySenderId(Long senderId);
     
