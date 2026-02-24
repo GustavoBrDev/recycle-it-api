@@ -2,6 +2,9 @@ package com.ifsc.ctds.stinghen.recycle_it_api.services.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FriendRequestResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.DeniedRequestException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
@@ -51,33 +54,6 @@ public class FriendRequestService {
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Solicitação de amizade criada com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
-     * Atualiza uma solicitação de amizade existente
-     * @param id o id da solicitação de amizade
-     * @param friendRequest a solicitação de amizade com os dados atualizados
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando a solicitação de amizade não for encontrada
-     */
-    @Transactional
-    public ResponseDTO update(Long id, FriendRequest friendRequest) {
-        FriendRequest existingFriendRequest = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Solicitação de amizade não encontrada com id: " + id
-                ));
-
-        existingFriendRequest.setSender(friendRequest.getSender());
-        existingFriendRequest.setTarget(friendRequest.getTarget());
-        existingFriendRequest.setSendDate(friendRequest.getSendDate());
-
-        repository.save(existingFriendRequest);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Solicitação de amizade atualizada com sucesso")
                 .isAlert(false)
                 .isError(false)
                 .build();
@@ -156,6 +132,57 @@ public class FriendRequestService {
     }
 
     /**
+     * Aceita a solicitação de amizade
+     * @param id o id da solictação aceita
+     * @param email o e-mail do usuário que realizou a aprovação
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws DeniedRequestException quando a solicitação de amizade não lhe pertence
+     * @throws EntityNotFoundException quando a solicitação de amizade não for encontrada
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO accept (Long id, String email) {
+
+        FriendRequest friendRequest = this.getObjectById(id);
+
+        if ( ! friendRequest.getTarget().getCredential().getEmail().equals(email) ) {
+            throw new DeniedRequestException("A solicitação em questão não lhe pertence");
+        }
+
+        ResponseDTO response = regularUserService.addFriend( friendRequest.getSender().getId(), friendRequest.getTarget().getId() );
+        this.deleteById(id);
+
+        return response;
+    }
+
+    /**
+     * Rejeita a solicitação de amizade
+     * @param id o id da solictação aceita
+     * @param email o e-mail do usuário que realizou a rejeição
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws DeniedRequestException quando a solicitação de amizade não lhe pertence
+     * @throws EntityNotFoundException quando a solicitação de amizade não for encontrada
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO reject (Long id, String email) {
+
+        FriendRequest friendRequest = this.getObjectById(id);
+
+        if ( ! friendRequest.getTarget().getCredential().getEmail().equals(email) ) {
+            throw new DeniedRequestException("A solicitação em questão não lhe pertence");
+        }
+
+        deleteById(id);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Solicitação de amizade rejeitada com sucesso")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
      * Obtem o objeto de FriendRequest pelo id fornecido
      * @param id o id a ser buscado
      * @return a solicitação de amizade em forma de {@link FriendRequest}
@@ -185,26 +212,6 @@ public class FriendRequestService {
     }
 
     /**
-     * Obtém solicitações de amizade por destinatário
-     * @param target o usuário destinatário
-     * @return lista de solicitações de amizade em forma de {@link FriendRequest}
-     */
-    @Transactional(readOnly = true)
-    public List<FriendRequest> getByTarget(User target) {
-        return repository.findByTarget(target);
-    }
-
-    /**
-     * Obtém solicitações de amizade por remetente
-     * @param sender o usuário remetente
-     * @return lista de solicitações de amizade em forma de {@link FriendRequest}
-     */
-    @Transactional(readOnly = true)
-    public List<FriendRequest> getBySender(User sender) {
-        return repository.findBySender(sender);
-    }
-
-    /**
      * Obtém solicitações de amizade por ID do destinatário
      * @param targetId o ID do usuário destinatário
      * @return lista de solicitações de amizade em forma de {@link FriendRequest}
@@ -212,9 +219,8 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public List<FriendRequest> getByTargetId(Long targetId) {
-        if (credentialsRepository.existsById(targetId)) {
-            User target = credentialsRepository.findById(targetId).get().getUser();
-            return repository.findByTarget(target);
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId);
         }
 
         throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
@@ -228,9 +234,8 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public List<FriendRequest> getBySenderId(Long senderId) {
-        if (credentialsRepository.existsById(senderId)) {
-            User sender = credentialsRepository.findById(senderId).get().getUser();
-            return repository.findBySender(sender);
+        if (regularUserService.existsById(senderId)) {
+            return repository.findBySenderId(senderId);
         }
 
         throw new NotFoundException("Usuário não encontrado com o ID " + senderId);
@@ -244,9 +249,8 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public List<FriendRequest> getByTargetEmail(String targetEmail) {
-        if (credentialsRepository.existsByEmail(targetEmail)) {
-            User target = credentialsRepository.findByEmail(targetEmail).get().getUser();
-            return repository.findByTarget(target);
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail);
         }
 
         throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
@@ -260,12 +264,259 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public List<FriendRequest> getBySenderEmail(String senderEmail) {
-        if (credentialsRepository.existsByEmail(senderEmail)) {
-            User sender = credentialsRepository.findByEmail(senderEmail).get().getUser();
-            return repository.findBySender(sender);
+        if (regularUserService.existsByEmail(senderEmail)) {
+            return repository.findBySender_Credential_Email(senderEmail);
         }
 
         throw new NotFoundException("Usuário não encontrado com o e-mail " + senderEmail);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por ID do destinatário
+     * @param targetId o ID do usuário destinatário
+     * @return lista de solicitações de amizade em forma de {@link FriendRequest}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequest> getAllByTargetId(Long targetId) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por ID do destinatário com paginação
+     * @param targetId o ID do usuário destinatário
+     * @param pageable as configurações de paginação
+     * @return página de solicitações de amizade em forma de {@link FriendRequest} utilizando paginação {@link Page}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public Page<FriendRequest> getAllByTargetId(Long targetId, Pageable pageable) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId, pageable);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por email do destinatário
+     * @param targetEmail o email do usuário destinatário
+     * @return lista de solicitações de amizade em forma de {@link FriendRequest}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequest> getAllByTargetEmail(String targetEmail) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por email do destinatário com paginação
+     * @param targetEmail o email do usuário destinatário
+     * @param pageable as configurações de paginação
+     * @return página de solicitações de amizade em forma de {@link FriendRequest} utilizando paginação {@link Page}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public Page<FriendRequest> getAllByTargetEmail(String targetEmail, Pageable pageable) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail, pageable);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
+    }
+
+    /**
+     * Obtém uma solicitação de amizade por ID como ResponseDTO
+     * @param id o ID da solicitação de amizade
+     * @return uma {@link ResponseDTO} do tipo {@link FriendRequestResponseDTO}
+     * @throws EntityNotFoundException quando a solicitação de amizade não for encontrada
+     */
+    @Transactional(readOnly = true)
+    public ResponseDTO getObjectByIdAsResponse(Long id) {
+        FriendRequest friendRequest = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Solicitação de amizade não encontrada com o ID " + id));
+        
+        return new FriendRequestResponseDTO(friendRequest);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade como ResponseDTO
+     * @return uma {@link ResponseDTO} contendo lista de {@link FriendRequestResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public ResponseDTO getAllAsResponse() {
+        List<FriendRequestResponseDTO> friendRequests = repository.findAll().stream()
+                .map(FriendRequestResponseDTO::new)
+                .toList();
+        
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Solicitações de amizade encontradas")
+                .content("Total de " + friendRequests.size() + " solicitações")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade paginadas como ResponseDTO
+     * @param pageable as configurações de paginação
+     * @return uma {@link ResponseDTO} contendo página de {@link FriendRequestResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public ResponseDTO getAllAsResponse(Pageable pageable) {
+        Page<FriendRequestResponseDTO> friendRequests = repository.findAll(pageable)
+                .map(FriendRequestResponseDTO::new);
+        
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Solicitações de amizade encontradas")
+                .content("Página " + (friendRequests.getNumber() + 1) + " de " + friendRequests.getTotalPages())
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Obtém solicitações de amizade por ID do destinatário como ResponseDTO
+     * @param targetId o ID do usuário destinatário
+     * @return uma lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getByTargetIdAsResponse(Long targetId) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Obtém solicitações de amizade por ID do remetente como ResponseDTO
+     * @param senderId o ID do usuário remetente
+     * @return uma lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getBySenderIdAsResponse(Long senderId) {
+        if (regularUserService.existsById(senderId)) {
+            return repository.findBySenderId(senderId).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + senderId);
+    }
+
+    /**
+     * Obtém solicitações de amizade por email do destinatário como ResponseDTO
+     * @param targetEmail o email do usuário destinatário
+     * @return uma lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getByTargetEmailAsResponse(String targetEmail) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
+    }
+
+    /**
+     * Obtém solicitações de amizade por email do remetente como ResponseDTO
+     * @param senderEmail o email do usuário remetente
+     * @return uma lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getBySenderEmailAsResponse(String senderEmail) {
+        if (regularUserService.existsByEmail(senderEmail)) {
+            return repository.findBySender_Credential_Email(senderEmail).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + senderEmail);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por ID do destinatário como ResponseDTO
+     * @param targetId o ID do usuário destinatário
+     * @return uma lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getAllByTargetIdAsResponse(Long targetId) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por ID do destinatário com paginação como ResponseDTO
+     * @param targetId o ID do usuário destinatário
+     * @param pageable as configurações de paginação
+     * @return uma página de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public Page<FriendRequestResponseDTO> getAllByTargetIdAsResponse(Long targetId, Pageable pageable) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.findByTargetId(targetId, pageable)
+                    .map(FriendRequestResponseDTO::new);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por email do destinatário como ResponseDTO
+     * @param targetEmail o email do usuário destinatário
+     * @return uma {@link ResponseDTO} contendo lista de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getAllByTargetEmailAsResponse(String targetEmail) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail).stream()
+                    .map(FriendRequestResponseDTO::new)
+                    .toList();
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
+    }
+
+    /**
+     * Obtém todas as solicitações de amizade por email do destinatário com paginação como ResponseDTO
+     * @param targetEmail o email do usuário destinatário
+     * @param pageable as configurações de paginação
+     * @return uma página de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public Page<FriendRequestResponseDTO> getAllByTargetEmailAsResponse(String targetEmail, Pageable pageable) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.findByTarget_Credential_Email(targetEmail, pageable)
+                    .map(FriendRequestResponseDTO::new);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
     }
 
     /**
@@ -277,10 +528,8 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public boolean existsBySenderAndTarget(Long senderId, Long targetId) {
-        if (credentialsRepository.existsById(senderId) && credentialsRepository.existsById(targetId)) {
-            User sender = credentialsRepository.findById(senderId).get().getUser();
-            User target = credentialsRepository.findById(targetId).get().getUser();
-            return repository.existsBySenderAndTarget(sender, target);
+        if (regularUserService.existsById(senderId) && regularUserService.existsById(targetId)) {
+            return repository.existsBySenderIdAndTargetId(senderId, targetId);
         }
 
         throw new NotFoundException("Usuário não encontrado com o ID fornecido");
@@ -295,13 +544,71 @@ public class FriendRequestService {
      */
     @Transactional(readOnly = true)
     public boolean existsBySenderAndTargetEmail(String senderEmail, String targetEmail) {
-        if (credentialsRepository.existsByEmail(senderEmail) && credentialsRepository.existsByEmail(targetEmail)) {
-            User sender = credentialsRepository.findByEmail(senderEmail).get().getUser();
-            User target = credentialsRepository.findByEmail(targetEmail).get().getUser();
-            return repository.existsBySenderAndTarget(sender, target);
+        if (regularUserService.existsByEmail(senderEmail) && regularUserService.existsByEmail(targetEmail)) {
+            return repository.existsBySender_Credential_EmailAndTarget_Credential_Email(senderEmail, targetEmail);
         }
 
         throw new NotFoundException("Usuário não encontrado com o e-mail fornecido");
+    }
+
+    /**
+     * Verifica se existe alguma solicitação de amizade com base no destinatário por ID
+     * @param targetId o ID do usuário destinatário
+     * @return true se existir alguma solicitação, false caso contrário
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByTargetId(Long targetId) {
+        if (regularUserService.existsById(targetId)) {
+            return repository.existsByTargetId(targetId);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + targetId);
+    }
+
+    /**
+     * Verifica se existe alguma solicitação de amizade com base no destinatário por email
+     * @param targetEmail o email do usuário destinatário
+     * @return true se existir alguma solicitação, false caso contrário
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByTargetEmail(String targetEmail) {
+        if (regularUserService.existsByEmail(targetEmail)) {
+            return repository.existsByTarget_Credential_Email(targetEmail);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + targetEmail);
+    }
+
+    /**
+     * Verifica se existe alguma solicitação de amizade com base no remetente por ID
+     * @param senderId o ID do usuário remetente
+     * @return true se existir alguma solicitação, false caso contrário
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsBySenderId(Long senderId) {
+        if (regularUserService.existsById(senderId)) {
+            return repository.existsBySenderId(senderId);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID " + senderId);
+    }
+
+    /**
+     * Verifica se existe alguma solicitação de amizade com base no remetente por email
+     * @param senderEmail o email do usuário remetente
+     * @return true se existir alguma solicitação, false caso contrário
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsBySenderEmail(String senderEmail) {
+        if (regularUserService.existsByEmail(senderEmail)) {
+            return repository.existsBySender_Credential_Email(senderEmail);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + senderEmail);
     }
 
     /**

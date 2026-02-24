@@ -631,6 +631,26 @@ public class RegularUserService {
     }
 
     /**
+     * Verifica se existe um usuário pelo ID
+     * @param id o ID a ser verificado
+     * @return true se existir, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
+    }
+
+    /**
+     * Verifica se existe um usuário pelo e-mail
+     * @param email o e-mail a ser verificado
+     * @return true se existir, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        return credentialsRepository.existsByEmail(email);
+    }
+
+    /**
      * Deleta o usuário com base em seu email
      * @param email o e-mail do usuário a ser deletado
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
