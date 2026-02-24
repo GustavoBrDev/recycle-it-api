@@ -29,8 +29,6 @@ import java.util.List;
 public class ArticleService {
 
     public ArticleRepository repository;
-    public UserCredentialsRepository credentialsRepository;
-
 
     /**
      * Atualiza um artigo existente
@@ -133,30 +131,6 @@ public class ArticleService {
     }
 
     /**
-     * Atualiza o autor de um artigo
-     * @param id o id do artigo
-     * @param author o novo autor
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando o artigo não for encontrado
-     */
-    @Transactional
-    public ResponseDTO editAuthor(Long id, User author) {
-        if (repository.existsById(id)) {
-            Article article = repository.findById(id).get();
-            article.setAuthor(author);
-            repository.save(article);
-
-            return FeedbackResponseDTO.builder()
-                    .mainMessage("Artigo atualizado com sucesso")
-                    .isAlert(false)
-                    .isError(false)
-                    .build();
-        }
-
-        throw new EntityNotFoundException("Artigo não encontrado com id: " + id);
-    }
-
-    /**
      * Obtem o objeto de Article pelo id fornecido
      * @param id o id a ser buscado
      * @return o artigo em forma de {@link Article}
@@ -183,34 +157,6 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public Page<Article> getAll(Pageable pageable) {
         return repository.findAll(pageable);
-    }
-
-    /**
-     * Obtém artigos por autor de forma paginada
-     * @param authorId o id do autor
-     * @param pageable as configurações de paginação
-     * @return página de artigos em forma de {@link Article} utilizando paginação {@link Page}
-     */
-    @Transactional(readOnly = true)
-    public Page<Article> getByAuthorId(Long authorId, Pageable pageable) {
-        return repository.findByAuthor_Id(authorId, pageable);
-    }
-
-    /**
-     * Obtém artigos por email do autor de forma paginada
-     * @param email o email do autor
-     * @param pageable as configurações de paginação
-     * @return página de artigos em forma de {@link Article} utilizando paginação {@link Page}
-     * @throws NotFoundException quando o usuário não for encontrado
-     */
-    @Transactional(readOnly = true)
-    public Page<Article> getByAuthorEmail(String email, Pageable pageable) {
-        if (credentialsRepository.existsByEmail(email)) {
-            User user = credentialsRepository.findByEmail(email).get().getUser();
-            return repository.findByAuthor_Id(user.getId(), pageable);
-        }
-
-        throw new NotFoundException("Usuário não encontrado com o e-mail " + email);
     }
 
     /**

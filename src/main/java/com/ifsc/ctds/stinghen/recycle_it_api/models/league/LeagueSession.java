@@ -31,6 +31,8 @@ public class LeagueSession implements ILeagueSession{
 
     private LocalDate endDate;
 
+    public boolean isFinished;
+
     @Override
     public void start() {
 

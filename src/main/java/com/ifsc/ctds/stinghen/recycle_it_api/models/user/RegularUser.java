@@ -2,6 +2,8 @@ package com.ifsc.ctds.stinghen.recycle_it_api.models.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.Goal;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
@@ -37,6 +39,9 @@ public class RegularUser extends User{
 
     @OneToMany(mappedBy = "user")
     private List<PurchasedItem> purchasedItems;
+
+    @ManyToMany
+    private List<Article> articles;
 
     private Long recycleGems;
 
@@ -116,5 +121,33 @@ public class RegularUser extends User{
         }
 
         this.projects.remove(project);
+    }
+
+    /**
+     * Adiciona um artigo de conhecimento a lista de artigos lidos
+     * @param article o artigo de conhecimento a ser adicionado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void addArticle (Article article) {
+
+        if (this.articles.contains(article)) {
+            throw new InvalidRelationshipException("O artigo já foi lido pelo usuário");
+        }
+
+        this.articles.add(article);
+    }
+
+    /**
+     * Remove um artigo de conhecimento a lista de artigos lidos
+     * @param article o artigo de conhecimento a ser removido
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void removeArticle (Article article) {
+
+        if (! this.articles.contains(article)) {
+            throw new InvalidRelationshipException("O artigo não foi lido pelo usuário");
+        }
+
+        this.articles.remove(article);
     }
 }

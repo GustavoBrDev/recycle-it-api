@@ -14,7 +14,7 @@ import java.time.Duration;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public abstract class ArticleResponseDTO implements ResponseDTO {
+public class ArticleResponseDTO implements ResponseDTO {
 
     public Long id;
 

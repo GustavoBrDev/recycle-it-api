@@ -10,12 +10,13 @@ import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.article.ArticleService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.ProjectService;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,6 +46,7 @@ public class RegularUserService {
     public PasswordEncoder passwordEncoder;
     public LeagueService leagueService;
     public ProjectService projectService;
+    public ArticleService articleService;
 
     /**
      * Cria/persiste o registro de um usuário no banco de dados
@@ -451,6 +453,60 @@ public class RegularUserService {
         return FeedbackResponseDTO.builder()
                 .mainMessage("Projeto Removido")
                 .content("O projeto foi removido da lista de projetos em andamento")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Marca um artigo como lido
+     * @param userId o ID do usuário base
+     * @param articleId o ID do artigo a ser adicionado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso o usuário ou o artigo não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO addArticle ( Long userId, Long articleId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        Article article = articleService.getObjectById(articleId);
+
+        user.addArticle(article);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Artigo Lido")
+                .content("O artigo foi adicionado á lista de artigos lidos")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Desmarca um artigo como lido
+     * @param userId o ID do usuário base
+     * @param articleId o ID do artigo a ser removido
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso o usuário ou o artigo não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO removeArticle ( Long userId, Long articleId ){
+
+        RegularUser user = repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
+
+        Article article = articleService.getObjectById(articleId);
+
+        user.removeArticle(article);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Artigo Removido")
+                .content("O artigo foi removido da lista de artigos lidos")
                 .isAlert(false)
                 .isError(false)
                 .build();

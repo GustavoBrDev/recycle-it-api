@@ -23,6 +23,13 @@ public class PointsPunctuation extends Punctuation {
 
     @Override
     public Long calculateTotal() {
-        return 0L;
+
+        double total =
+                (recyclePoints != null ? recyclePoints : 0L)
+                        + (reusePoints != null ? reusePoints : 0L)
+                        + (knowledgePoints != null ? knowledgePoints : 0L) * 0.85
+                        + (reducePoints != null ? reducePoints : 0L) * 0.15;
+
+        return Math.round(total);
     }
 }
