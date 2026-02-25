@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -24,5 +25,6 @@ public abstract class Punctuation implements IPunctuation {
     @ManyToOne
     public User user;
 
+    @UpdateTimestamp
     private LocalDateTime lastUpdated;
 }
