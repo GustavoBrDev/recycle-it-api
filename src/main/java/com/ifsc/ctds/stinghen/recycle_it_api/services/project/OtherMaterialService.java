@@ -28,49 +28,6 @@ public class OtherMaterialService {
     public OtherMaterialRepository repository;
 
     /**
-     * Cria/persiste o registro de um outro material no banco de dados
-     * @param otherMaterial o outro material a ser criado
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     */
-    @Transactional
-    public ResponseDTO create(OtherMaterial otherMaterial) {
-        repository.save(otherMaterial);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Outro material criado com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
-     * Atualiza um outro material existente
-     * @param id o id do outro material
-     * @param otherMaterial o outro material com os dados atualizados
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando o outro material não for encontrado
-     */
-    @Transactional
-    public ResponseDTO update(Long id, OtherMaterial otherMaterial) {
-        OtherMaterial existingOtherMaterial = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Outro material não encontrado com id: " + id
-                ));
-
-        existingOtherMaterial.setQuantity(otherMaterial.getQuantity());
-        existingOtherMaterial.setType(otherMaterial.getType());
-        existingOtherMaterial.setDescription(otherMaterial.getDescription());
-
-        repository.save(existingOtherMaterial);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Outro material atualizado com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
      * Atualiza o tipo de material de um outro material
      * @param id o id do outro material
      * @param type o novo tipo de material
@@ -154,9 +111,7 @@ public class OtherMaterialService {
      */
     @Transactional(readOnly = true)
     public List<OtherMaterial> getByType(OtherMaterials type) {
-        return repository.findAll().stream()
-                .filter(material -> material.getType().equals(type))
-                .toList();
+        return repository.findByType(type);
     }
 
     /**
@@ -167,16 +122,7 @@ public class OtherMaterialService {
      */
     @Transactional(readOnly = true)
     public Page<OtherMaterial> getByType(OtherMaterials type, Pageable pageable) {
-        List<OtherMaterial> materialsByType = repository.findAll().stream()
-                .filter(material -> material.getType().equals(type))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), materialsByType.size());
-        List<OtherMaterial> pageContent = materialsByType.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, materialsByType.size());
+        return repository.findByType(type, pageable);
     }
 
     /**
@@ -186,10 +132,7 @@ public class OtherMaterialService {
      */
     @Transactional(readOnly = true)
     public List<OtherMaterial> getByDescriptionContaining(String description) {
-        return repository.findAll().stream()
-                .filter(material -> material.getDescription() != null && 
-                                   material.getDescription().toLowerCase().contains(description.toLowerCase()))
-                .toList();
+        return repository.findByDescriptionContainingIgnoreCase(description);
     }
 
     /**
@@ -200,17 +143,7 @@ public class OtherMaterialService {
      */
     @Transactional(readOnly = true)
     public Page<OtherMaterial> getByDescriptionContaining(String description, Pageable pageable) {
-        List<OtherMaterial> materialsByDescription = repository.findAll().stream()
-                .filter(material -> material.getDescription() != null && 
-                                   material.getDescription().toLowerCase().contains(description.toLowerCase()))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), materialsByDescription.size());
-        List<OtherMaterial> pageContent = materialsByDescription.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, materialsByDescription.size());
+        return repository.findByDescriptionContainingIgnoreCase(description, pageable);
     }
 
     /**

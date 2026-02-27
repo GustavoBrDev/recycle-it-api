@@ -28,48 +28,6 @@ public class RecycledMaterialService {
     public RecycledMaterialRepository repository;
 
     /**
-     * Cria/persiste o registro de um material reciclado no banco de dados
-     * @param recycledMaterial o material reciclado a ser criado
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     */
-    @Transactional
-    public ResponseDTO create(RecycledMaterial recycledMaterial) {
-        repository.save(recycledMaterial);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Material reciclado criado com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
-     * Atualiza um material reciclado existente
-     * @param id o id do material reciclado
-     * @param recycledMaterial o material reciclado com os dados atualizados
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando o material reciclado não for encontrado
-     */
-    @Transactional
-    public ResponseDTO update(Long id, RecycledMaterial recycledMaterial) {
-        RecycledMaterial existingRecycledMaterial = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Material reciclado não encontrado com id: " + id
-                ));
-
-        existingRecycledMaterial.setQuantity(recycledMaterial.getQuantity());
-        existingRecycledMaterial.setType(recycledMaterial.getType());
-
-        repository.save(existingRecycledMaterial);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Material reciclado atualizado com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
-
-    /**
      * Atualiza o tipo de material de um material reciclado
      * @param id o id do material reciclado
      * @param type o novo tipo de material
@@ -129,9 +87,7 @@ public class RecycledMaterialService {
      */
     @Transactional(readOnly = true)
     public List<RecycledMaterial> getByType(Materials type) {
-        return repository.findAll().stream()
-                .filter(material -> material.getType().equals(type))
-                .toList();
+        return repository.findByType(type);
     }
 
     /**
@@ -142,16 +98,7 @@ public class RecycledMaterialService {
      */
     @Transactional(readOnly = true)
     public Page<RecycledMaterial> getByType(Materials type, Pageable pageable) {
-        List<RecycledMaterial> materialsByType = repository.findAll().stream()
-                .filter(material -> material.getType().equals(type))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), materialsByType.size());
-        List<RecycledMaterial> pageContent = materialsByType.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, materialsByType.size());
+        return repository.findByType(type, pageable);
     }
 
     /**

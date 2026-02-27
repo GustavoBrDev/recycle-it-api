@@ -18,5 +18,8 @@ public abstract class ProjectMaterial {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    public Project project;
+
     private Long quantity;
 }

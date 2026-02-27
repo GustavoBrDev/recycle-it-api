@@ -3,7 +3,6 @@ package com.ifsc.ctds.stinghen.recycle_it_api.services.goals;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
-import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.goals.ReduceItemRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -224,9 +223,7 @@ public class ReduceItemService {
      */
     @Transactional(readOnly = true)
     public List<ReduceItem> getByType(Materials type) {
-        return repository.findAll().stream()
-                .filter(item -> item.getType().equals(type))
-                .toList();
+        return repository.findByType(type);
     }
 
     /**
@@ -237,16 +234,7 @@ public class ReduceItemService {
      */
     @Transactional(readOnly = true)
     public Page<ReduceItem> getByType(Materials type, Pageable pageable) {
-        List<ReduceItem> itemsByType = repository.findAll().stream()
-                .filter(item -> item.getType().equals(type))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), itemsByType.size());
-        List<ReduceItem> pageContent = itemsByType.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, itemsByType.size());
+        return repository.findByType(type, pageable);
     }
 
     /**
@@ -255,9 +243,7 @@ public class ReduceItemService {
      */
     @Transactional(readOnly = true)
     public List<ReduceItem> getCompleted() {
-        return repository.findAll().stream()
-                .filter(item -> item.getActualQuantity() >= item.getTargetQuantity())
-                .toList();
+        return repository.findCompleted();
     }
 
     /**
@@ -267,16 +253,7 @@ public class ReduceItemService {
      */
     @Transactional(readOnly = true)
     public Page<ReduceItem> getCompleted(Pageable pageable) {
-        List<ReduceItem> completedItems = repository.findAll().stream()
-                .filter(item -> item.getActualQuantity() >= item.getTargetQuantity())
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), completedItems.size());
-        List<ReduceItem> pageContent = completedItems.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, completedItems.size());
+        return repository.findCompleted(pageable);
     }
 
     /**

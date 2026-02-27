@@ -19,6 +19,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentials
 import com.ifsc.ctds.stinghen.recycle_it_api.services.article.ArticleService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.ProjectService;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ public class RegularUserService {
     public LeagueService leagueService;
     public ProjectService projectService;
     public ArticleService articleService;
+    public PointsPunctuationService punctuationService;
 
     /**
      * Cria/persiste o registro de um usuário no banco de dados
@@ -67,7 +69,8 @@ public class RegularUserService {
         }
 
         user.getCredential().setPassword( passwordEncoder.encode(user.getCredential().getPassword()));
-        repository.save(user);
+        user = repository.save(user);
+        punctuationService.create(user);
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Cadastro Efetuado")

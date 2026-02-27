@@ -134,9 +134,7 @@ public class PurchasableItemService {
      */
     @Transactional(readOnly = true)
     public List<PurchasableItem> getAllOnSale() {
-        return repository.findAll().stream()
-                .filter(item -> item.getIsOnSale())
-                .toList();
+        return repository.findByIsOnSaleTrue();
     }
 
     /**
@@ -146,16 +144,7 @@ public class PurchasableItemService {
      */
     @Transactional(readOnly = true)
     public Page<PurchasableItem> getAllOnSale(Pageable pageable) {
-        List<PurchasableItem> onSaleItems = repository.findAll().stream()
-                .filter(item -> item.getIsOnSale())
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), onSaleItems.size());
-        List<PurchasableItem> pageContent = onSaleItems.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, onSaleItems.size());
+        return repository.findByIsOnSaleTrue(pageable);
     }
 
     /**

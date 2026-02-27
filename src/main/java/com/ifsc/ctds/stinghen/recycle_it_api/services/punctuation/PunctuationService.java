@@ -87,10 +87,7 @@ public class PunctuationService {
      */
     @Transactional(readOnly = true)
     public List<Punctuation> getByLastUpdatedRange(LocalDateTime startDate, LocalDateTime endDate) {
-        return repository.findAll().stream()
-                .filter(punctuation -> punctuation.getLastUpdated().isAfter(startDate) && 
-                                      punctuation.getLastUpdated().isBefore(endDate))
-                .toList();
+        return repository.findByLastUpdatedBetween(startDate, endDate);
     }
 
     /**
@@ -102,17 +99,7 @@ public class PunctuationService {
      */
     @Transactional(readOnly = true)
     public Page<Punctuation> getByLastUpdatedRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        List<Punctuation> punctuationsInRange = repository.findAll().stream()
-                .filter(punctuation -> punctuation.getLastUpdated().isAfter(startDate) && 
-                                      punctuation.getLastUpdated().isBefore(endDate))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), punctuationsInRange.size());
-        List<Punctuation> pageContent = punctuationsInRange.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, punctuationsInRange.size());
+        return repository.findByLastUpdatedBetween(startDate, endDate, pageable);
     }
 
     /**

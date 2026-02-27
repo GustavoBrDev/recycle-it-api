@@ -119,9 +119,7 @@ public class PurchasableSkipCommentService {
      */
     @Transactional(readOnly = true)
     public List<PurchasableSkipComment> getAllOnSale() {
-        return repository.findAll().stream()
-                .filter(skipComment -> skipComment.getIsOnSale())
-                .toList();
+        return repository.findByIsOnSaleTrue();
     }
 
     /**
@@ -131,16 +129,7 @@ public class PurchasableSkipCommentService {
      */
     @Transactional(readOnly = true)
     public Page<PurchasableSkipComment> getAllOnSale(Pageable pageable) {
-        List<PurchasableSkipComment> onSaleSkipComments = repository.findAll().stream()
-                .filter(skipComment -> skipComment.getIsOnSale())
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), onSaleSkipComments.size());
-        List<PurchasableSkipComment> pageContent = onSaleSkipComments.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, onSaleSkipComments.size());
+        return repository.findByIsOnSaleTrue(pageable);
     }
 
     /**

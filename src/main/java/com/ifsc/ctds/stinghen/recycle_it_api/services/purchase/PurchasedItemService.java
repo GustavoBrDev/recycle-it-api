@@ -171,10 +171,7 @@ public class PurchasedItemService {
      */
     @Transactional(readOnly = true)
     public List<PurchasedItem> getByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        return repository.findAll().stream()
-                .filter(item -> item.getPurchaseDate().isAfter(startDate) && 
-                               item.getPurchaseDate().isBefore(endDate))
-                .toList();
+        return repository.findByPurchaseDateBetween(startDate, endDate);
     }
 
     /**
@@ -186,17 +183,7 @@ public class PurchasedItemService {
      */
     @Transactional(readOnly = true)
     public Page<PurchasedItem> getByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        List<PurchasedItem> itemsInRange = repository.findAll().stream()
-                .filter(item -> item.getPurchaseDate().isAfter(startDate) && 
-                               item.getPurchaseDate().isBefore(endDate))
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), itemsInRange.size());
-        List<PurchasedItem> pageContent = itemsInRange.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, itemsInRange.size());
+        return repository.findByPurchaseDateBetween(startDate, endDate, pageable);
     }
 
     /**

@@ -1,14 +1,19 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.services.project;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectMaterialRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.FullProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
+import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectMaterialRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service para os métodos específicos de projetos
@@ -29,6 +35,7 @@ import java.util.List;
 public class ProjectService {
 
     public ProjectRepository repository;
+    public ProjectMaterialRepository materialRepository;
 
     /**
      * Cria/persiste o registro de um projeto no banco de dados
@@ -63,7 +70,11 @@ public class ProjectService {
 
         existingProject.setText(requestDTO.text);
         existingProject.setDescription(requestDTO.description);
-        // TODO: Analisar esse update
+        existingProject.setMaterials(
+                requestDTO.materials.stream()
+                        .map(ProjectMaterialRequestDTO::convert)
+                        .collect(java.util.stream.Collectors.toList())
+        );
         existingProject.setInstructions(requestDTO.instructions);
 
         repository.save(existingProject);
@@ -145,6 +156,58 @@ public class ProjectService {
         }
 
         throw new EntityNotFoundException("Projeto não encontrado com id: " + id);
+    }
+
+    /**
+     * Atualiza a quantidade de um material específico do projeto
+     * @param projectId o id do projeto
+     * @param materialId o id do material
+     * @param newQuantity a nova quantidade
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o projeto ou material não for encontrado
+     */
+    @Transactional
+    public ResponseDTO updateMaterialQuantity(Long projectId, Long materialId, Long newQuantity) {
+        Project project = repository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Projeto não encontrado com id: " + projectId
+                ));
+
+        if (project.getMaterials() == null || project.getMaterials().isEmpty()) {
+            throw new EntityNotFoundException("O projeto não possui materiais para atualizar");
+        }
+
+        ProjectMaterial materialToUpdate = project.getMaterials().stream()
+                .filter(material -> material.getId().equals(materialId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Material não encontrado com id: " + materialId
+                ));
+
+        materialToUpdate.setQuantity(newQuantity);
+        repository.save(project);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Quantidade do material atualizada com sucesso")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Obtém todos os materiais de um projeto
+     * @param projectId o id do projeto
+     * @return lista de materiais do projeto
+     * @throws EntityNotFoundException quando o projeto não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<ProjectMaterial> getProjectMaterials(Long projectId) {
+        Project project = repository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Projeto não encontrado com id: " + projectId
+                ));
+
+        return project.getMaterials() != null ? project.getMaterials() : List.of();
     }
 
     /**
@@ -276,6 +339,181 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public Page<FullProjectResponseDTO> getAllFull(Pageable pageable) {
         return repository.findAll(pageable).map(FullProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente
+     * @param search campo de pesquisa
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getFiltered(String search) {
+        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente
+     * @param search campo de pesquisa
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getFiltered(String search, Pageable pageable) {
+        return repository.findAll(
+                ProjectSpecification.getFiltered(search), pageable).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente como QuickProjectResponseDTO
+     * @param search campo de pesquisa
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getFilteredAsQuick(String search) {
+        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente como QuickProjectResponseDTO
+     * @param search campo de pesquisa
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getFilteredAsQuick(String search, Pageable pageable) {
+        return repository.findAll(
+                ProjectSpecification.getFiltered(search), pageable).map(QuickProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente como FullProjectResponseDTO
+     * @param search campo de pesquisa
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<FullProjectResponseDTO> getFilteredAsFull(String search) {
+        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(FullProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos filtrados através de uma pesquisa inteligente como FullProjectResponseDTO
+     * @param search campo de pesquisa
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<FullProjectResponseDTO> getFilteredAsFull(String search, Pageable pageable) {
+        return repository.findAll(
+                ProjectSpecification.getFiltered(search), pageable).map(FullProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais do usuário
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByMaterials(Map<Materials, Long> userMaterials) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), Pageable.unpaged()).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais do usuário (paginado)
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByMaterials(Map<Materials, Long> userMaterials, Pageable pageable) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), pageable).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais do usuário com tolerância
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param tolerancePercent percentual de tolerância (ex: 20 para aceitar até 20% a mais)
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByMaterialsWithTolerance(Map<Materials, Long> userMaterials, int tolerancePercent) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterialsWithTolerance(userMaterials, tolerancePercent), Pageable.unpaged()).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais do usuário com tolerância (paginado)
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param tolerancePercent percentual de tolerância (ex: 20 para aceitar até 20% a mais)
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByMaterialsWithTolerance(Map<Materials, Long> userMaterials, int tolerancePercent, Pageable pageable) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterialsWithTolerance(userMaterials, tolerancePercent), pageable).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados e filtrados combinando busca inteligente e materiais
+     * @param search termo de busca inteligente
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @return página de DTOs de projetos recomendados e filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getFilteredAndRecommended(String search, Map<Materials, Long> userMaterials) {
+        return repository.findAll(ProjectSpecification.getFilteredAndRecommended(search, userMaterials), Pageable.unpaged()).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados e filtrados combinando busca inteligente e materiais (paginado)
+     * @param search termo de busca inteligente
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos recomendados e filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getFilteredAndRecommended(String search, Map<Materials, Long> userMaterials, Pageable pageable) {
+        return repository.findAll(ProjectSpecification.getFilteredAndRecommended(search, userMaterials), pageable).map(ProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByMaterialsAsQuick(Map<Materials, Long> userMaterials) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO (paginado)
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param pageable configurações de paginação
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByMaterialsAsQuick(Map<Materials, Long> userMaterials, Pageable pageable) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), pageable).map(QuickProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados como FullProjectResponseDTO
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @return página de DTOs full de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<FullProjectResponseDTO> getRecommendedByMaterialsAsFull(Map<Materials, Long> userMaterials) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), Pageable.unpaged()).map(FullProjectResponseDTO::new);
+    }
+
+    /**
+     * Obtém projetos recomendados como FullProjectResponseDTO (paginado)
+     * @param userMaterials mapa de materiais do usuário (tipo -> quantidade)
+     * @param pageable configurações de paginação
+     * @return página de DTOs full de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<FullProjectResponseDTO> getRecommendedByMaterialsAsFull(Map<Materials, Long> userMaterials, Pageable pageable) {
+        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), pageable).map(FullProjectResponseDTO::new);
     }
 
     /**

@@ -110,9 +110,7 @@ public class ProjectMaterialService {
      */
     @Transactional(readOnly = true)
     public List<ProjectMaterial> getByMinQuantity(Long minQuantity) {
-        return repository.findAll().stream()
-                .filter(material -> material.getQuantity() >= minQuantity)
-                .toList();
+        return repository.findByQuantityGreaterThanEqual(minQuantity);
     }
 
     /**
@@ -123,16 +121,7 @@ public class ProjectMaterialService {
      */
     @Transactional(readOnly = true)
     public Page<ProjectMaterial> getByMinQuantity(Long minQuantity, Pageable pageable) {
-        List<ProjectMaterial> materialsByMinQuantity = repository.findAll().stream()
-                .filter(material -> material.getQuantity() >= minQuantity)
-                .toList();
-        
-        // Convert to Page manually since we don't have a custom query
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), materialsByMinQuantity.size());
-        List<ProjectMaterial> pageContent = materialsByMinQuantity.subList(start, end);
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, materialsByMinQuantity.size());
+        return repository.findByQuantityGreaterThanEqual(minQuantity, pageable);
     }
 
     /**

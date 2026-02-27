@@ -10,6 +10,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.article.KnowledgeArticleRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.KnowledgeArticleSpecification;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,6 +34,7 @@ public class KnowledgeArticleService {
 
     public KnowledgeArticleRepository repository;
     public RegularUserService userService;
+    public PointsPunctuationService punctuationService;
 
     /**
      * Cria/persiste o registro de um artigo de conhecimento no banco de dados
@@ -169,8 +171,7 @@ public class KnowledgeArticleService {
 
         RegularUser user = userService.getObjectByEmail(email);
         userService.addArticle(user.getId(), id );
-
-        // TODO: Adicionar pontuação
+        punctuationService.incrementKnowledgePointsByUserEmail(email, 75L);
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Artigo finalizado com sucesso")
