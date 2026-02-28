@@ -7,7 +7,9 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.league.UserPunctuatio
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.league.LeagueSession;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.league.UserPunctuation;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.league.LeagueSessionRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.repository.league.UserPunctuationRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -31,6 +33,7 @@ public class LeagueSessionService {
 
     public LeagueSessionRepository repository;
     public RegularUserService userService;
+    public UserPunctuationRepository userPunctuationRepository;
 
     /**
      * Cria/persiste o registro de uma sessão de liga no banco de dados
@@ -39,6 +42,7 @@ public class LeagueSessionService {
      */
     @Transactional
     public ResponseDTO create(LeagueSession session) {
+        // TODO: Criação dinâmica
         repository.save(session);
 
         return FeedbackResponseDTO.builder()
@@ -264,10 +268,7 @@ public class LeagueSessionService {
     @Transactional(readOnly = true)
     public UserPunctuation getActivePunctuationByUserId(Long userId) {
         LeagueSession session = getActiveSessionByUserId(userId);
-        return session.getUsers().stream()
-                .filter(up -> up.getUser().getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Pontuação não encontrada para o usuário na sessão ativa"));
+        return userPunctuationRepository.findByUser_IdAndSession_Id(userId, session.getId());
     }
 
     /**
@@ -281,6 +282,33 @@ public class LeagueSessionService {
         if (userService.existsByEmail(email)) {
             Long userId = userService.getObjectByEmail(email).getId();
             return getActivePunctuationByUserId(userId);
+        }
+        throw new NotFoundException("Usuário não encontrado com o e-mail " + email);
+    }
+
+    /**
+     * Obtém o PointsPunctuation da sessão de liga ativa de um usuário por ID
+     * @param userId o ID do usuário
+     * @return o PointsPunctuation em forma de {@link PointsPunctuation}
+     * @throws NotFoundException quando não houver sessão ativa para o usuário
+     */
+    @Transactional(readOnly = true)
+    public PointsPunctuation getActivePointsPunctuationByUserId(Long userId) {
+        UserPunctuation userPunctuation = getActivePunctuationByUserId(userId);
+        return userPunctuation.getPunctuation();
+    }
+
+    /**
+     * Obtém o PointsPunctuation da sessão de liga ativa de um usuário por email
+     * @param email o email do usuário
+     * @return o PointsPunctuation em forma de {@link PointsPunctuation}
+     * @throws NotFoundException quando não houver sessão ativa para o usuário
+     */
+    @Transactional(readOnly = true)
+    public PointsPunctuation getActivePointsPunctuationByUserEmail(String email) {
+        if (userService.existsByEmail(email)) {
+            Long userId = userService.getObjectByEmail(email).getId();
+            return getActivePointsPunctuationByUserId(userId);
         }
         throw new NotFoundException("Usuário não encontrado com o e-mail " + email);
     }

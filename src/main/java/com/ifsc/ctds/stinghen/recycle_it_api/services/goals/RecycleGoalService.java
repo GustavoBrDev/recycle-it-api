@@ -6,9 +6,12 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.goals.RecycleGoalResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.goals.RecycleGoalRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service para os métodos específicos de metas de reciclagem
@@ -30,19 +34,59 @@ import java.util.List;
 public class RecycleGoalService {
 
     public RecycleGoalRepository repository;
+    public RegularUserService userService;
+
 
     /**
      * Cria/persiste o registro de uma meta de reciclagem no banco de dados
+     * Verifica se o usuário já tem uma meta ativa do mesmo tipo
      * @param requestDTO DTO de request de metas de reciclagem
+     * @param email o e-mail do usuário possuidor da meta
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      */
     @Transactional
-    public ResponseDTO create(RecycleGoalRequestDTO requestDTO) {
+    public ResponseDTO create(RecycleGoalRequestDTO requestDTO, String email) {
         RecycleGoal goal = requestDTO.convert();
+        RegularUser user = userService.getObjectByEmail(email);
+        goal.setUser(user);
+        Long userId = user.getId();
+        
+        // Verifica se já existe uma meta ativa do mesmo tipo para o usuário
+        List<RecycleGoal> activeGoals = getActiveByUserId(userId);
+        
+        if (!activeGoals.isEmpty()) {
+            // Se já existe meta ativa, define a nova como "next"
+            goal.setStatus(GoalStatus.NEXT);
+            
+            // Verifica se já existe uma meta "next" para atualizar
+            List<RecycleGoal> nextGoals = getNextByUserId(userId);
+            if (!nextGoals.isEmpty()) {
+                // Atualiza a meta "next" existente
+                RecycleGoal existingNextGoal = nextGoals.get(0);
+                existingNextGoal.setDifficult(goal.getDifficult());
+                existingNextGoal.setFrequency(goal.getFrequency());
+                existingNextGoal.setMultiplier(goal.getMultiplier());
+                existingNextGoal.setNextCheck(goal.getNextCheck());
+                existingNextGoal.setProgress(goal.getProgress());
+                repository.save(existingNextGoal);
+                
+                return FeedbackResponseDTO.builder()
+                        .mainMessage("Meta futura atualizada")
+                        .content("Sua meta de reciclagem foi atualizada com sucesso")
+                        .isAlert(false)
+                        .isError(false)
+                        .build();
+            }
+        } else {
+            // Se não existe meta ativa, define como "actual"
+            goal.setStatus(GoalStatus.ACTUAL);
+        }
+        
         repository.save(goal);
 
+        String statusMessage = goal.getStatus() == GoalStatus.ACTUAL ? "ativa" : "'futura'";
         return FeedbackResponseDTO.builder()
-                .mainMessage("Meta de reciclagem criada com sucesso")
+                .mainMessage("Meta de reciclagem " + statusMessage + " salva com sucesso")
                 .isAlert(false)
                 .isError(false)
                 .build();
@@ -117,6 +161,193 @@ public class RecycleGoalService {
     @Transactional(readOnly = true)
     public Page<RecycleGoal> getAll(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem ativas (sem paginação)
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getActive() {
+        return repository.findByStatus(GoalStatus.ACTUAL);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem ativas (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getActive(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.ACTUAL, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas (sem paginação)
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getInactive() {
+        return repository.findByStatus(GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getInactive(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" (sem paginação)
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getNext() {
+        return repository.findByStatus(GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getNext(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.NEXT, pageable);
+    }
+
+    // ============= MÉTODOS POR STATUS E USUÁRIO ID =============
+
+    /**
+     * Obtém todas as metas de reciclagem ativas de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getActiveByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.ACTUAL);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem ativas de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getActiveByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.ACTUAL, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getInactiveByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getInactiveByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getNextByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getNextByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.NEXT, pageable);
+    }
+
+    // ============= MÉTODOS POR STATUS E USUÁRIO EMAIL =============
+
+    /**
+     * Obtém todas as metas de reciclagem ativas de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getActiveByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem ativas de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getActiveByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getInactiveByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem inativas de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getInactiveByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoal> getNextByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas de reciclagem "next" de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link RecycleGoal}
+     */
+    @Transactional(readOnly = true)
+    public Page<RecycleGoal> getNextByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.NEXT, pageable);
     }
 
     /**

@@ -24,14 +24,14 @@ public class LeagueSession implements ILeagueSession{
     @ManyToOne
     private League league;
 
-    @OneToMany
+    @OneToMany(mappedBy = "session")
     private List<UserPunctuation> users;
 
     private LocalDate startDate;
 
     private LocalDate endDate;
 
-    public boolean isFinished;
+    private boolean isFinished;
 
     @Override
     public void start() {

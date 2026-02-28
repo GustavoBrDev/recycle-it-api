@@ -5,6 +5,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.goals.GoalResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.Goal;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.goals.GoalRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service para os métodos específicos de metas
@@ -29,36 +31,6 @@ import java.util.List;
 public class GoalService {
 
     public GoalRepository repository;
-
-
-    /**
-     * Atualiza uma meta existente
-     * @param id o id da meta
-     * @param goal a meta com os dados atualizados
-     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
-     * @throws EntityNotFoundException quando a meta não for encontrada
-     */
-    @Transactional
-    public ResponseDTO update(Long id, Goal goal) {
-        Goal existingGoal = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Meta não encontrada com id: " + id
-                ));
-
-        existingGoal.setProgress(goal.getProgress());
-        existingGoal.setDifficult(goal.getDifficult());
-        existingGoal.setFrequency(goal.getFrequency());
-        existingGoal.setNextCheck(goal.getNextCheck());
-        existingGoal.setMultiplier(goal.getMultiplier());
-
-        repository.save(existingGoal);
-
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Meta atualizada com sucesso")
-                .isAlert(false)
-                .isError(false)
-                .build();
-    }
 
     /**
      * Atualiza o progresso de uma meta
@@ -107,6 +79,8 @@ public class GoalService {
 
         throw new EntityNotFoundException("Meta não encontrada com id: " + id);
     }
+
+    // ============= UPDATE/EDIT =============
 
     /**
      * Atualiza a dificuldade de uma meta
@@ -231,6 +205,258 @@ public class GoalService {
     @Transactional(readOnly = true)
     public Page<Goal> getAll(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    /**
+     * Atualiza o status de uma meta
+     * @param id o id da meta
+     * @param status o novo status
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando a meta não for encontrada
+     */
+    @Transactional
+    public ResponseDTO editStatus(Long id, GoalStatus status) {
+        if (repository.existsById(id)) {
+            Goal goal = repository.getReferenceById(id);
+            goal.setStatus(status);
+            repository.save(goal);
+
+            return FeedbackResponseDTO.builder()
+                    .mainMessage("Status da meta atualizado com sucesso")
+                    .content("Meta agora está com status: " + status.getValue())
+                    .isAlert(false)
+                    .isError(false)
+                    .build();
+        }
+
+        throw new EntityNotFoundException("Meta não encontrada com id: " + id);
+    }
+
+    /**
+     * Verifica se há alguma meta marcada para o dia de hoje com base no ID do usuário
+     * @param userId o ID do usuário em questão
+     * @return um {@link Boolean} indicando se há (true) ou não metas
+     */
+    @Transactional(readOnly = true)
+    public Boolean checkGoalsForTodayByUserId ( Long userId ){
+        return getGoalsForTodayByUserId(userId).isEmpty();
+    }
+
+    /**
+     * Verifica se há alguma meta marcada para o dia de hoje com base no e-mail do usuário
+     * @param email o e-mail do usuário em questão
+     * @return um {@link Boolean} indicando se há (true) ou não metas
+     */
+    @Transactional(readOnly = true)
+    public Boolean checkGoalsForTodayByUserEmail ( String email ){
+        return getGoalsForTodayByUserEmail(email).isEmpty();
+    }
+
+    /**
+     * Retorna IDs das metas marcadas para hoje com base no nextCheck
+     * @param userId o ID do usuário
+     * @return lista de IDs das metas marcadas para hoje
+     */
+    @Transactional(readOnly = true)
+    public List<Long> getGoalsForTodayByUserId(Long userId) {
+        LocalDate today = LocalDate.now();
+        return repository.findGoalIdsByUserAndNextCheck(userId, today);
+    }
+
+    /**
+     * Retorna IDs das metas marcadas para hoje com base no nextCheck
+     * @param email o email do usuário
+     * @return lista de IDs das metas marcadas para hoje
+     */
+    @Transactional(readOnly = true)
+    public List<Long> getGoalsForTodayByUserEmail(String email) {
+        LocalDate today = LocalDate.now();
+        return repository.findGoalIdsByUserEmailAndNextCheck(email, today);
+    }
+
+    /**
+     * Obtém todas as metas ativas (sem paginação)
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getActive() {
+        return repository.findByStatus(GoalStatus.ACTUAL);
+    }
+
+    /**
+     * Obtém todas as metas ativas (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getActive(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.ACTUAL, pageable);
+    }
+
+
+    /**
+     * Obtém todas as metas inativas (sem paginação)
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getInactive() {
+        return repository.findByStatus(GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas inativas (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getInactive(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas "next" (sem paginação)
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getNext() {
+        return repository.findByStatus(GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas "next" (com paginação)
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getNext(Pageable pageable) {
+        return repository.findByStatus(GoalStatus.NEXT, pageable);
+    }
+
+    /**
+     * Obtém todas as metas ativas de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getActiveByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.ACTUAL);
+    }
+
+
+    /**
+     * Obtém todas as metas ativas de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getActiveByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.ACTUAL, pageable);
+    }
+
+    /**
+     * Obtém todas as metas inativas de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getInactiveByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas inativas de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getInactiveByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas "next" de um usuário por ID (sem paginação)
+     * @param userId o ID do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getNextByUserId(Long userId) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas "next" de um usuário por ID (com paginação)
+     * @param userId o ID do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getNextByUserId(Long userId, Pageable pageable) {
+        return repository.findByUser_IdAndStatus(userId, GoalStatus.NEXT, pageable);
+    }
+
+    /**
+     * Obtém todas as metas ativas de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getActiveByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL);
+    }
+
+    /**
+     * Obtém todas as metas ativas de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getActiveByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL, pageable);
+    }
+
+    /**
+     * Obtém todas as metas inativas de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getInactiveByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.INACTIVE);
+    }
+
+    /**
+     * Obtém todas as metas inativas de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getInactiveByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.INACTIVE, pageable);
+    }
+
+    /**
+     * Obtém todas as metas "next" de um usuário por email (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public List<Goal> getNextByUserEmail(String email) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.NEXT);
+    }
+
+    /**
+     * Obtém todas as metas "next" de um usuário por email (com paginação)
+     * @param email o email do usuário
+     * @param pageable as configurações de paginação
+     * @return página de metas em forma de {@link Goal}
+     */
+    @Transactional(readOnly = true)
+    public Page<Goal> getNextByUserEmail(String email, Pageable pageable) {
+        return repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.NEXT, pageable);
     }
 
     /**

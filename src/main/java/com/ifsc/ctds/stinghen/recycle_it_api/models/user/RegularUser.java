@@ -52,10 +52,7 @@ public class RegularUser extends User{
     private List<Project> projects;
 
     @OneToMany(mappedBy = "user")
-    private List<Goal> actualGoals;
-
-    @OneToMany(mappedBy = "user")
-    private List<Goal> nextGoals;
+    private List<Goal> goals;
 
     /**
      * Adiciona um usuário a lista de amizade

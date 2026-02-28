@@ -5,9 +5,12 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.league.FullLeagueResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.league.SimpleLeagueResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.league.LeagueRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service para os métodos específicos da liga
@@ -28,6 +32,7 @@ import java.util.List;
 public class LeagueService {
 
     public LeagueRepository repository;
+    public RegularUserService userService;
 
     /**
      * Cria/persiste o registro de uma liga no banco de dados

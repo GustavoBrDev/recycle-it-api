@@ -12,8 +12,11 @@ import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipExcep
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueSessionService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
@@ -39,7 +42,8 @@ public class ProjectService {
 
     public ProjectRepository repository;
     public RegularUserService userService;
-    public PointsPunctuationService pontuationService;
+    public PointsPunctuationService punctuationService;
+    public LeagueSessionService leagueService;
 
     /**
      * Cria/persiste o registro de um projeto no banco de dados
@@ -231,8 +235,20 @@ public class ProjectService {
     @Transactional
     public ResponseDTO finalize ( RegularUser user, Long projectId ){
 
-        userService.removeProject(user.getId(), projectId);
-        pontuationService.incrementRecyclePoints(user.getId(), 5L);
+        Long userId = user.getId();
+
+        userService.removeProject(userId, projectId);
+        punctuationService.incrementRecyclePoints(userId, 5L);
+
+        // Adicionar pontuação na liga
+
+        try {
+            PointsPunctuation leaguePunctuation = leagueService.getActivePointsPunctuationByUserId(userId);
+            punctuationService.incrementRecyclePoints(leaguePunctuation.getId(), 5L);
+
+        } catch ( Exception ignored){
+
+        }
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Projeto finalizado com sucesso")

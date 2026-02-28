@@ -733,4 +733,25 @@ public class RegularUserService {
 
         throw new EntityNotFoundException("Usuário não encontrado com o e-mail " + email );
     }
+
+    /**
+     * Obtém todos os usuários por ID da liga
+     * @param leagueId o ID da liga
+     * @return lista de usuários em forma de {@link RegularUser}
+     */
+    @Transactional(readOnly = true)
+    public List<RegularUser> getByActualLeagueId(Long leagueId) {
+        return repository.findByActualLeague_Id(leagueId);
+    }
+
+    /**
+     * Obtém todos os usuários por ID da liga de forma paginada
+     * @param leagueId o ID da liga
+     * @param pageable as configurações de paginação
+     * @return página de usuários em forma de {@link RegularUser} utilizando paginação {@link Page}
+     */
+    @Transactional(readOnly = true)
+    public Page<RegularUser> getByActualLeagueId(Long leagueId, Pageable pageable) {
+        return repository.findByActualLeague_Id(leagueId, pageable);
+    }
 }
