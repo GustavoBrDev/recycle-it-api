@@ -7,6 +7,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.goals.ReduceGoalRespo
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceGoal;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.goals.ReduceGoalRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
@@ -410,5 +411,174 @@ public class ReduceGoalService {
         }
 
         throw new EntityNotFoundException("Meta de redução não encontrada com o ID " + id);
+    }
+
+    // ============= MÉTODOS DE PROCESSAMENTO DE PROJETOS =============
+
+    /**
+     * Processa o impacto na meta de redução quando um projeto é finalizado
+     * Analisa materiais reutilizáveis, atualiza itens e calcula pontos de reutilização
+     * @param userId ID do usuário
+     * @param project Projeto finalizado
+     * @return total de pontos de reutilização concedidos (0 se não houver)
+     */
+    @Transactional
+    public int processProjectCompletion(Long userId, Project project) {
+        int totalReusePoints = 0;
+        
+        try {
+            var activeGoals = getActiveByUserId(userId);
+
+            if (activeGoals.isEmpty()) {
+                return 0;
+            }
+            
+            ReduceGoal activeGoal = activeGoals.getFirst();
+            
+            // Analisa cada material do projeto
+            if (project.getMaterials() != null) {
+                for (com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial projectMaterial : project.getMaterials()) {
+                    int materialPoints = calculateMaterialReusePoints(projectMaterial, activeGoal);
+                    
+                    if (materialPoints > 0) {
+                        totalReusePoints += materialPoints;
+                        
+                        // Limita a 50 pontos no total
+                        if (totalReusePoints >= 50) {
+                            totalReusePoints = 50;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Se houve pontos de reutilização, recalcula o progresso da meta
+            if (totalReusePoints > 0) {
+                float newProgress = calculateProgress(activeGoal);
+                float currentProgress = activeGoal.getProgress() != null ? activeGoal.getProgress() : 0.0f;
+                float progressIncrement = newProgress - currentProgress;
+                
+                if (progressIncrement != 0) {
+                    incrementProgress(activeGoal.getId(), progressIncrement);
+                }
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao processar meta de redução: " + e.getMessage());
+        }
+        
+        return totalReusePoints;
+    }
+
+    /**
+     * Calcula o progresso de uma meta de redução com base na porcentagem de redução alcançada
+     * [RN-REDUCE] Normal: 1% de redução, Trabalho Duro: 3% de redução, Difícil: 5% de redução, Audacioso: 10% de redução
+     * @param reduceGoal meta de redução
+     * @return progresso calculado (0.0 a 1.0+)
+     */
+    @Transactional(readOnly = true)
+    public float calculateProgress(ReduceGoal reduceGoal) {
+        if (reduceGoal == null || reduceGoal.getItems() == null || reduceGoal.getItems().isEmpty()) {
+            return 0.0f;
+        }
+
+        // Obtém o alvo de redução com base na dificuldade
+        float targetReductionPercentage = getTargetByDifficulty(reduceGoal.getDifficult());
+        
+        // Calcula a redução total alcançada somando todos os itens
+        float totalReductionAchieved = 0.0f;
+        
+        for (var item : reduceGoal.getItems()) {
+            if (item != null && item.getTargetQuantity() > 0) {
+                // targetQuantity = consumo inicial (baseline)
+                // actualQuantity = consumo atual (após redução)
+                int baseline = item.getTargetQuantity();
+                int current = item.getActualQuantity();
+                
+                // Calcula a redução alcançada para este item
+                int reduction = baseline - current;
+                if (reduction > 0 && baseline > 0) {
+                    float itemReductionPercentage = (float) reduction / baseline;
+                    totalReductionAchieved += itemReductionPercentage;
+                }
+            }
+        }
+        
+        // Se não há baseline, retorna 0.0
+        if (reduceGoal.getItems().isEmpty()) {
+            return 0.0f;
+        }
+        
+        // Calcula a média percentual de redução alcançada
+        float averageReductionAchieved = totalReductionAchieved / reduceGoal.getItems().size();
+        
+        // Calcula o progresso como redução alcançada / alvo de redução
+        if (targetReductionPercentage <= 0) {
+            return 0.0f;
+        }
+        
+        return averageReductionAchieved / targetReductionPercentage;
+    }
+
+    /**
+     * Obtém o alvo de redução percentual com base na dificuldade
+     * @param difficult a dificuldade da meta
+     * @return percentual alvo de redução (0.0 a 1.0)
+     */
+    private float getTargetByDifficulty(com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult difficult) {
+        if (difficult == null) {
+            return 0.01f; // Padrão: Normal (1%)
+        }
+        
+        return switch (difficult) {
+            case normal -> 0.01f;    // 1%
+            case extraJob -> 0.03f;  // 3%
+            case difficult -> 0.05f; // 5%
+            case hard -> 0.10f;      // 10%
+            default -> 0.01f;
+        };
+    }
+
+    /**
+     * Calcula os pontos de reutilização para um material específico do projeto
+     * Verifica se o material está na lista de redução da meta ativa
+     * @param projectMaterial Material do projeto a ser analisado
+     * @param reduceGoal Meta de redução ativa do usuário
+     * @return Pontos de reutilização (2 pontos por material compatível)
+     */
+    private int calculateMaterialReusePoints(com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial projectMaterial, 
+                                           ReduceGoal reduceGoal) {
+        if (reduceGoal.getItems() == null || reduceGoal.getItems().isEmpty()) {
+            return 0;
+        }
+        
+        for (var reduceItem : reduceGoal.getItems()) {
+            if (isMaterialCompatible(projectMaterial, reduceItem)) {
+                try {
+                    // Incrementa a quantidade atual do item de redução
+                    reduceItemService.increment(reduceItem.getId());
+                    return 2; // 2 pontos por material reutilizado
+                } catch (Exception e) {
+                    System.err.println("Erro ao incrementar item de redução: " + e.getMessage());
+                    return 0;
+                }
+            }
+        }
+        
+        return 0;
+    }
+
+    /**
+     * Verifica se um material do projeto é compatível com um item da meta de redução
+     * @param projectMaterial Material do projeto
+     * @param reduceItem Item da meta de redução
+     * @return true se forem compatíveis
+     */
+    private boolean isMaterialCompatible(com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial projectMaterial, 
+                                       com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem reduceItem) {
+        if (projectMaterial instanceof com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial recycledMaterial) {
+            return recycledMaterial.getType() == reduceItem.getType();
+        }
+        return false;
     }
 }

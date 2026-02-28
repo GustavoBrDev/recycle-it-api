@@ -371,4 +371,93 @@ public class RecycleGoalService {
 
         throw new EntityNotFoundException("Meta de reciclagem não encontrada com o ID " + id);
     }
+
+    // ============= MÉTODOS DE PROCESSAMENTO DE PROJETOS =============
+
+    /**
+     * Processa o impacto na meta de reciclagem quando um projeto é finalizado
+     * Adiciona o projeto à lista de projetos finalizados e atualiza o progresso
+     * [RN-RECYCLE] O progresso é medido pela quantidade de projetos realizados vs alvo definido pela dificuldade
+     * 
+     * @param userId ID do usuário
+     * @param project Projeto finalizado
+     * @return progresso atualizado da meta (0.0 se não houver meta ativa)
+     */
+    @Transactional
+    public float processProjectCompletion(Long userId, com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project project) {
+        try {
+            var activeGoals = getActiveByUserId(userId);
+            if (activeGoals.isEmpty()) {
+                return 0.0f;
+            }
+            
+            RecycleGoal activeGoal = activeGoals.getFirst();
+            
+            // Adiciona o projeto à lista de projetos finalizados
+            if (activeGoal.getFinishedProjects() == null) {
+                activeGoal.setFinishedProjects(new java.util.ArrayList<>());
+            }
+            activeGoal.getFinishedProjects().add(project);
+            
+            // Recalcula e atualiza o progresso
+            float newProgress = calculateProgress(activeGoal);
+            float currentProgress = activeGoal.getProgress() != null ? activeGoal.getProgress() : 0.0f;
+            float progressIncrement = newProgress - currentProgress;
+            
+            if (progressIncrement != 0) {
+                incrementProgress(activeGoal.getId(), progressIncrement);
+            }
+            
+            return newProgress;
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao processar meta de reciclagem: " + e.getMessage());
+            return 0.0f;
+        }
+    }
+
+    /**
+     * Calcula o progresso de uma meta de reciclagem com base na dificuldade
+     * [RN-RECYCLE] Normal: 1 projeto/mês, Trabalho Duro: 2 projetos/mês, Difícil: 4 projetos/mês, Audacioso: 6 projetos/mês
+     * @param recycleGoal meta de reciclagem
+     * @return progresso calculado (0.0 a 1.0+)
+     */
+    @Transactional(readOnly = true)
+    public float calculateProgress(RecycleGoal recycleGoal) {
+        if (recycleGoal == null) {
+            return 0.0f;
+        }
+
+        // Obtém o alvo de projetos com base na dificuldade
+        int targetProjects = getTargetByDifficulty(recycleGoal.getDifficult());
+        
+        // Obtém a quantidade de projetos realizados
+        int finishedProjects = recycleGoal.getFinishedProjects() != null ? recycleGoal.getFinishedProjects().size() : 0;
+        
+        // Calcula o progresso como projetos realizados / alvo
+        if (targetProjects <= 0) {
+            return 0.0f;
+        }
+        
+        return (float) finishedProjects / targetProjects;
+    }
+
+    /**
+     * Obtém o alvo de projetos de reciclagem com base na dificuldade
+     * @param difficult a dificuldade da meta
+     * @return quantidade alvo de projetos mensais
+     */
+    private int getTargetByDifficulty(com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult difficult) {
+        if (difficult == null) {
+            return 1; // Padrão: Normal
+        }
+        
+        return switch (difficult) {
+            case normal -> 1;
+            case extraJob -> 2;
+            case difficult -> 4;
+            case hard -> 6;
+            default -> 1;
+        };
+    }
 }

@@ -480,4 +480,139 @@ public class GoalService {
 
         throw new EntityNotFoundException("Meta não encontrada com o ID " + id);
     }
+
+    /**
+     * Calcula o progresso total de uma meta com base nos seus itens
+     * Aplica a regra de negócio específica para cada tipo de meta
+     * @param goal a meta cujo progresso será calculado
+     * @return progresso total calculado como valor entre 0.0 e 1.0
+     */
+    @Transactional(readOnly = true)
+    public float calculateGoalProgress(Goal goal) {
+        if (goal == null) {
+            return 0.0f;
+        }
+
+        // Para metas genéricas sem itens, usa o progresso existente
+        return goal.getProgress() != null ? goal.getProgress() : 0.0f;
+    }
+
+    /**
+     * Calcula o progresso total de uma meta de reciclagem
+     * [RN-RECYCLE] O progresso é medido pela quantidade de projetos realizados vs alvo definido pela dificuldade
+     * Normal: 1 projeto/mês, Trabalho Duro: 2 projetos/mês, Difícil: 4 projetos/mês, Audacioso: 6 projetos/mês
+     * @param recycleGoal a meta de reciclagem
+     * @return progresso da meta de reciclagem (0.0 a 1.0+)
+     */
+    @Transactional(readOnly = true)
+    public float calculateRecycleGoalProgress(com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal recycleGoal) {
+        if (recycleGoal == null) {
+            return 0.0f;
+        }
+
+        // Obtém o alvo de projetos com base na dificuldade
+        int targetProjects = getRecycleTargetByDifficulty(recycleGoal.getDifficult());
+        
+        // Obtém a quantidade de projetos realizados
+        int finishedProjects = recycleGoal.getFinishedProjects() != null ? recycleGoal.getFinishedProjects().size() : 0;
+        
+        // Calcula o progresso como projetos realizados / alvo
+        if (targetProjects <= 0) {
+            return 0.0f;
+        }
+        
+        return (float) finishedProjects / targetProjects;
+    }
+
+    /**
+     * Obtém o alvo de projetos de reciclagem com base na dificuldade
+     * @param difficult a dificuldade da meta
+     * @return quantidade alvo de projetos mensais
+     */
+    private int getRecycleTargetByDifficulty(com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult difficult) {
+        if (difficult == null) {
+            return 1; // Padrão: Normal
+        }
+        
+        return switch (difficult) {
+            case normal -> 1;
+            case extraJob -> 2;
+            case difficult -> 4;
+            case hard -> 6;
+            default -> 1;
+        };
+    }
+
+    /**
+     * Calcula o progresso total de uma meta de redução com base na porcentagem de redução alcançada
+     * [RN-REDUCE] O progresso é medido pela proximidade da redução alcançada vs alvo definido pela dificuldade
+     * Normal: 1% de redução, Trabalho Duro: 3% de redução, Difícil: 5% de redução, Audacioso: 10% de redução
+     * @param reduceGoal a meta de redução
+     * @return progresso calculado como valor entre 0.0 e 1.0+
+     */
+    @Transactional(readOnly = true)
+    public float calculateReduceGoalProgress(com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceGoal reduceGoal) {
+        if (reduceGoal == null || reduceGoal.getItems() == null || reduceGoal.getItems().isEmpty()) {
+            return 0.0f;
+        }
+
+        // Obtém o alvo de redução com base na dificuldade
+        float targetReductionPercentage = getReduceTargetByDifficulty(reduceGoal.getDifficult());
+        
+        // Calcula a redução total alcançada somando todos os itens
+        float totalReductionAchieved = 0.0f;
+        int totalBaseline = 0;
+        
+        for (var item : reduceGoal.getItems()) {
+            if (item != null && item.getTargetQuantity() > 0) {
+                // targetQuantity = consumo inicial (baseline)
+                // actualQuantity = consumo atual (após redução)
+                int baseline = item.getTargetQuantity();
+                int current = item.getActualQuantity();
+                
+                // Calcula a redução alcançada para este item
+                int reduction = baseline - current;
+                if (reduction > 0 && baseline > 0) {
+                    float itemReductionPercentage = (float) reduction / baseline;
+                    totalReductionAchieved += itemReductionPercentage;
+                }
+                
+                totalBaseline += baseline;
+            }
+        }
+        
+        // Se não há baseline, retorna 0.0
+        if (totalBaseline == 0) {
+            return 0.0f;
+        }
+        
+        // Calcula a média percentual de redução alcançada
+        float averageReductionAchieved = totalReductionAchieved / reduceGoal.getItems().size();
+        
+        // Calcula o progresso como redução alcançada / alvo de redução
+        if (targetReductionPercentage <= 0) {
+            return 0.0f;
+        }
+        
+        return averageReductionAchieved / targetReductionPercentage;
+    }
+
+    /**
+     * Obtém o alvo de redução percentual com base na dificuldade
+     * @param difficult a dificuldade da meta
+     * @return percentual alvo de redução (0.0 a 1.0)
+     */
+    private float getReduceTargetByDifficulty(com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult difficult) {
+        if (difficult == null) {
+            return 0.01f; // Padrão: Normal (1%)
+        }
+        
+        return switch (difficult) {
+            case normal -> 0.01f;    // 1%
+            case extraJob -> 0.03f;  // 3%
+            case difficult -> 0.05f; // 5%
+            case hard -> 0.10f;      // 10%
+            default -> 0.01f;
+        };
+    }
 }
