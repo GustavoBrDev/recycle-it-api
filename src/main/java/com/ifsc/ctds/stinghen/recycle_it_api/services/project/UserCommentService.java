@@ -5,9 +5,10 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.UserCommentResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.UserComment;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.UserCommentRepository;
-import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,16 +30,32 @@ import java.util.List;
 public class UserCommentService {
 
     public UserCommentRepository repository;
-    public UserCredentialsRepository credentialsRepository;
+    public RegularUserService userService;
+    public ProjectService projectService;
+
 
     /**
      * Cria/persiste o registro de um comentário de usuário no banco de dados
      * @param comment o comentário a ser criado
+     * @param userEmail o email do usuário que está comentando
+     * @param projectId o id do projeto ao qual o comentário pertence
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      */
     @Transactional
-    public ResponseDTO create(UserComment comment) {
-        repository.save(comment);
+    public ResponseDTO create(String comment, String userEmail, Long projectId) {
+
+        RegularUser user = userService.getObjectByEmail(userEmail);
+
+        UserComment userComment = UserComment.builder()
+                .user(user)
+                .text(comment)
+                .date(LocalDateTime.now())
+                .project(projectService.getObjectById(projectId))
+                .build();
+
+        repository.save(userComment);
+        projectService.finalize(user, projectId);
+
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Comentário criado com sucesso")
@@ -217,8 +234,8 @@ public class UserCommentService {
      */
     @Transactional(readOnly = true)
     public List<UserComment> getByUserEmail(String email) {
-        if (credentialsRepository.existsByEmail(email)) {
-            Long userId = credentialsRepository.findByEmail(email).get().getUser().getId();
+        if (userService.existsByEmail(email)) {
+            Long userId = userService.getObjectByEmail(email).getId();
             return repository.findByUserId(userId);
         }
 
@@ -233,8 +250,8 @@ public class UserCommentService {
      */
     @Transactional(readOnly = true)
     public List<UserComment> getByUserEmailOrderByDateDesc(String email) {
-        if (credentialsRepository.existsByEmail(email)) {
-            Long userId = credentialsRepository.findByEmail(email).get().getUser().getId();
+        if (userService.existsByEmail(email)) {
+            Long userId = userService.getObjectByEmail(email).getId();
             return repository.findByUserIdOrderByDateDesc(userId);
         }
 

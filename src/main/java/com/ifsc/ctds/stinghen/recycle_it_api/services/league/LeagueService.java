@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.services.league;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.league.LeagueRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.league.FullLeagueResponseDTO;
@@ -30,12 +31,12 @@ public class LeagueService {
 
     /**
      * Cria/persiste o registro de uma liga no banco de dados
-     * @param league a liga a ser criada
+     * @param dto a liga a ser criada em formato {@link LeagueRequestDTO}
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      */
     @Transactional
-    public ResponseDTO create(League league) {
-        repository.save(league);
+    public ResponseDTO create(LeagueRequestDTO dto) {
+        repository.save(dto.convert());
 
         return FeedbackResponseDTO.builder()
                 .mainMessage("Liga criada com sucesso")

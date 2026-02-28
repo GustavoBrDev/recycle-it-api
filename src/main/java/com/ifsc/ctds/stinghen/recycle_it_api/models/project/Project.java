@@ -30,6 +30,6 @@ public class Project {
 
     private String instructions;
 
-    @OneToMany
+    @OneToMany(mappedBy = "project")
     private List<UserComment> userComments;
 }
