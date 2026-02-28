@@ -8,11 +8,14 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.FullProjectRe
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
-import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectMaterialRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -35,7 +38,8 @@ import java.util.Map;
 public class ProjectService {
 
     public ProjectRepository repository;
-    public ProjectMaterialRepository materialRepository;
+    public RegularUserService userService;
+    public PointsPunctuationService pontuationService;
 
     /**
      * Cria/persiste o registro de um projeto no banco de dados
@@ -192,6 +196,51 @@ public class ProjectService {
                 .isAlert(false)
                 .isError(false)
                 .build();
+    }
+
+    /**
+     * Inicia um projeto de reciclagem
+     * @param email o e-mail do usuário que iniciou o projeto
+     * @param projectId o ID do projeto iniciado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o projeto não for encontrado
+     * @throws InvalidRelationshipException caso a relação entre o usuário e o projeto seja inválida (já está realizando o projeto)
+     */
+    @Transactional
+    public ResponseDTO start ( String email, Long projectId ){
+
+       RegularUser user = userService.getObjectByEmail(email);
+       userService.addProject(user.getId() ,projectId);
+
+       return FeedbackResponseDTO.builder()
+                .mainMessage("Projeto iniciado com sucesso")
+                .isAlert(false)
+                .isError(false)
+                .build();
+
+    }
+
+    /**
+     * Finaliza um projeto de reciclagem
+     * @param user o usuário que finalizou o projeto
+     * @param projectId o ID do projeto finalizado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o projeto não for encontrado
+     * @throws InvalidRelationshipException caso a relação entre o usuário e o projeto seja inválida (não estava realizando o projeto)
+     */
+    @Transactional
+    public ResponseDTO finalize ( RegularUser user, Long projectId ){
+
+        userService.removeProject(user.getId(), projectId);
+        pontuationService.incrementRecyclePoints(user.getId(), 5L);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Projeto finalizado com sucesso")
+                .content("Você finalizou o projeto e obteve a pontuação associada")
+                .isAlert(false)
+                .isError(false)
+                .build();
+
     }
 
     /**
@@ -517,7 +566,7 @@ public class ProjectService {
     }
 
     /**
-     * Deleta o projeto com base em seu ID
+     * Deleta o projeto com base no seu ID
      * @param id o id do projeto a ser deletado
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando o projeto não for encontrado
