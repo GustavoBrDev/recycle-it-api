@@ -9,6 +9,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.goals.RecycleGoalRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
@@ -35,6 +36,7 @@ public class RecycleGoalService {
 
     public RecycleGoalRepository repository;
     public RegularUserService userService;
+    public GoalService goalService;
 
 
     /**
@@ -285,8 +287,6 @@ public class RecycleGoalService {
         return repository.findByUser_IdAndStatus(userId, GoalStatus.NEXT, pageable);
     }
 
-    // ============= MÉTODOS POR STATUS E USUÁRIO EMAIL =============
-
     /**
      * Obtém todas as metas de reciclagem ativas de um usuário por email (sem paginação)
      * @param email o email do usuário
@@ -372,19 +372,15 @@ public class RecycleGoalService {
         throw new EntityNotFoundException("Meta de reciclagem não encontrada com o ID " + id);
     }
 
-    // ============= MÉTODOS DE PROCESSAMENTO DE PROJETOS =============
-
     /**
      * Processa o impacto na meta de reciclagem quando um projeto é finalizado
      * Adiciona o projeto à lista de projetos finalizados e atualiza o progresso
-     * [RN-RECYCLE] O progresso é medido pela quantidade de projetos realizados vs alvo definido pela dificuldade
-     * 
      * @param userId ID do usuário
-     * @param project Projeto finalizado
+     * @param project Projeto finalizado (do tipo {@link Project})
      * @return progresso atualizado da meta (0.0 se não houver meta ativa)
      */
     @Transactional
-    public float processProjectCompletion(Long userId, com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project project) {
+    public float processProjectCompletion(Long userId, Project project) {
         try {
             var activeGoals = getActiveByUserId(userId);
             if (activeGoals.isEmpty()) {
@@ -397,18 +393,17 @@ public class RecycleGoalService {
             if (activeGoal.getFinishedProjects() == null) {
                 activeGoal.setFinishedProjects(new java.util.ArrayList<>());
             }
+
             activeGoal.getFinishedProjects().add(project);
             
             // Recalcula e atualiza o progresso
-            float newProgress = calculateProgress(activeGoal);
-            float currentProgress = activeGoal.getProgress() != null ? activeGoal.getProgress() : 0.0f;
-            float progressIncrement = newProgress - currentProgress;
+            float progress = calculateProgress(activeGoal);
             
-            if (progressIncrement != 0) {
-                incrementProgress(activeGoal.getId(), progressIncrement);
+            if (progress != 0) {
+                goalService.editProgress(activeGoal.getId(), progress);
             }
             
-            return newProgress;
+            return progress;
             
         } catch (Exception e) {
             System.err.println("Erro ao processar meta de reciclagem: " + e.getMessage());
@@ -418,9 +413,8 @@ public class RecycleGoalService {
 
     /**
      * Calcula o progresso de uma meta de reciclagem com base na dificuldade
-     * [RN-RECYCLE] Normal: 1 projeto/mês, Trabalho Duro: 2 projetos/mês, Difícil: 4 projetos/mês, Audacioso: 6 projetos/mês
-     * @param recycleGoal meta de reciclagem
-     * @return progresso calculado (0.0 a 1.0+)
+     * * @param recycleGoal meta de reciclagem
+     * @return progresso calculado (0.0 a 100.0)
      */
     @Transactional(readOnly = true)
     public float calculateProgress(RecycleGoal recycleGoal) {
@@ -439,7 +433,8 @@ public class RecycleGoalService {
             return 0.0f;
         }
         
-        return (float) finishedProjects / targetProjects;
+        float progress = (float) finishedProjects / targetProjects;
+        return Math.min(100.0f, Math.max(0.0f, progress * 100));
     }
 
     /**
@@ -447,7 +442,7 @@ public class RecycleGoalService {
      * @param difficult a dificuldade da meta
      * @return quantidade alvo de projetos mensais
      */
-    private int getTargetByDifficulty(com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult difficult) {
+    private int getTargetByDifficulty(GoalDifficult difficult) {
         if (difficult == null) {
             return 1; // Padrão: Normal
         }

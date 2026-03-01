@@ -10,10 +10,8 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectR
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
@@ -23,12 +21,13 @@ import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuat
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.RecycleGoalService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceGoalService;
-import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceItemService;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal;
-import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceGoal;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,18 +42,31 @@ import java.util.Map;
  * @see Project
  * @since 22/02/2026
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class ProjectService {
 
-    public ProjectRepository repository;
-    public RegularUserService userService;
-    public PointsPunctuationService punctuationService;
-    public LeagueSessionService leagueService;
-    public RecycleGoalService recycleGoalService;
-    public ReduceGoalService reduceGoalService;
-    public ReduceItemService reduceItemService;
-    public GoalService goalService;
+    @Autowired
+    private ProjectRepository repository;
+
+    @Autowired
+    @Lazy
+    private RegularUserService userService;
+
+    @Autowired
+    private PointsPunctuationService punctuationService;
+
+    @Autowired
+    private RecycleGoalService recycleGoalService;
+
+    @Autowired
+    private ReduceGoalService reduceGoalService;
+
+    @Autowired
+    private GoalService goalService;
+
+    @Autowired
+    private LeagueSessionService leagueService;
 
     /**
      * Cria/persiste o registro de um projeto no banco de dados
@@ -264,7 +276,8 @@ public class ProjectService {
         processRecycleGoalProgress(userId);
 
         // 5. Processa pontuação de reutilização baseada nos materiais do projeto
-        int reusePoints = processReusePoints(userId, project);
+        int reusePoints = reduceGoalService.process(userId, project);
+
 
         // 6. Adiciona pontuação na liga
         processLeaguePoints(userId, 5L + reusePoints);
@@ -280,6 +293,20 @@ public class ProjectService {
                 .isError(false)
                 .build();
 
+    }
+
+    /**
+     * Processa a adição de pontos na liga do usuário
+     * @param userId ID do usuário
+     * @param totalPoints Total de pontos a serem adicionados
+     */
+    private void processLeaguePoints(Long userId, Long totalPoints) {
+        try {
+            PointsPunctuation leaguePunctuation = leagueService.getActivePointsPunctuationByUserId(userId);
+            punctuationService.incrementRecyclePoints(leaguePunctuation.getId(), totalPoints);
+        } catch (Exception ignored) {
+            // Usuário não está em liga ativa - ignora silenciosamente
+        }
     }
 
     /**
@@ -626,8 +653,6 @@ public class ProjectService {
         throw new EntityNotFoundException("Projeto não encontrado com o ID " + id);
     }
 
-    // ============= MÉTODOS AUXILIARES DE PONTUAÇÃO =============
-
     /**
      * Processa a concessão de pontos de reciclagem para o usuário
      * @param userId ID do usuário que receberá os pontos
@@ -649,131 +674,6 @@ public class ProjectService {
             }
         } catch (Exception e) {
             System.err.println("Erro ao atualizar meta de reciclagem: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Processa a pontuação de reutilização baseada nos materiais do projeto
-     * [RN-17] Cada utilização de material da lista de redução concede 2 pontos (máximo 50 pontos)
-     * @param userId ID do usuário que receberá os pontos
-     * @param project Projeto cujos materiais serão analisados
-     * @return Total de pontos de reutilização concedidos
-     */
-    private int processReusePoints(Long userId, Project project) {
-        int totalReusePoints = 0;
-
-        try {
-            var activeReduceGoals = reduceGoalService.getActiveByUserId(userId);
-
-            if (activeReduceGoals.isEmpty()) {
-                return 0;
-            }
-
-            ReduceGoal activeReduceGoal = activeReduceGoals.getFirst();
-
-            if (project.getMaterials() != null) {
-                for (ProjectMaterial projectMaterial : project.getMaterials()) {
-                    int materialPoints = calculateMaterialReusePoints(projectMaterial, activeReduceGoal);
-
-                    if (materialPoints > 0) {
-                        punctuationService.incrementRecyclePoints(userId, (long) materialPoints);
-                        totalReusePoints += materialPoints;
-
-                        if (totalReusePoints >= 50) {
-                            totalReusePoints = 50;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (totalReusePoints > 0) {
-                updateReduceGoalProgress(userId, totalReusePoints / 2);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Erro ao processar pontos de reutilização: " + e.getMessage());
-        }
-
-        return totalReusePoints;
-    }
-
-    /**
-     * Calcula os pontos de reutilização para um material específico do projeto
-     * @param projectMaterial Material do projeto a ser analisado
-     * @param reduceGoal Meta de redução ativa do usuário
-     * @return Pontos de reutilização (2 pontos por material compatível)
-     */
-    private int calculateMaterialReusePoints(ProjectMaterial projectMaterial, ReduceGoal reduceGoal) {
-        if (reduceGoal.getItems() == null || reduceGoal.getItems().isEmpty()) {
-            return 0;
-        }
-
-        for (var reduceItem : reduceGoal.getItems()) {
-            if (isMaterialCompatible(projectMaterial, reduceItem)) {
-                try {
-                    reduceItemService.increment(reduceItem.getId());
-                    return 2;
-                } catch (Exception e) {
-                    System.err.println("Erro ao incrementar item de redução: " + e.getMessage());
-                    return 0;
-                }
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Verifica se um material do projeto é compatível com um item da meta de redução
-     * @param projectMaterial Material do projeto
-     * @param reduceItem Item da meta de redução
-     * @return true se forem compatíveis
-     */
-    private boolean isMaterialCompatible(ProjectMaterial projectMaterial, ReduceItem reduceItem) {
-        if (projectMaterial instanceof RecycledMaterial recycledMaterial) {
-            return recycledMaterial.getType() == reduceItem.getType();
-        }
-        return false;
-    }
-
-    /**
-     * Atualiza o progresso da meta de redução com base nos materiais reutilizados
-     * [RN-REDUCE] Materiais reutilizados incrementam o consumo atual (actualQuantity) dos itens
-     * O progresso é recalculado automaticamente com base na porcentagem de redução alcançada
-     * @param userId ID do usuário
-     * @param materialsReused Quantidade de materiais reutilizados
-     */
-    private void updateReduceGoalProgress(Long userId, int materialsReused) {
-        try {
-            var activeReduceGoals = reduceGoalService.getActiveByUserId(userId);
-            if (!activeReduceGoals.isEmpty()) {
-                ReduceGoal activeGoal = activeReduceGoals.getFirst();
-
-                // O progresso já foi atualizado nos itens através do método calculateMaterialReusePoints
-                // que chamou reduceItemService.increment() para cada material compatível
-                // Agora precisamos apenas recalcular o progresso total da meta
-                float newProgress = goalService.calculateReduceGoalProgress(activeGoal);
-
-                // Atualiza o progresso da meta com o novo valor calculado
-                goalService.incrementProgress(activeGoal.getId(), newProgress - (activeGoal.getProgress() != null ? activeGoal.getProgress() : 0.0f));
-            }
-        } catch (Exception e) {
-            System.err.println("Erro ao atualizar progresso da meta de redução: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Processa a adição de pontos na liga do usuário
-     * @param userId ID do usuário
-     * @param totalPoints Total de pontos a serem adicionados
-     */
-    private void processLeaguePoints(Long userId, Long totalPoints) {
-        try {
-            PointsPunctuation leaguePunctuation = leagueService.getActivePointsPunctuationByUserId(userId);
-            punctuationService.incrementRecyclePoints(leaguePunctuation.getId(), totalPoints);
-        } catch (Exception e) {
-            // Usuário não está em liga ativa - ignora silenciosamente
         }
     }
 }

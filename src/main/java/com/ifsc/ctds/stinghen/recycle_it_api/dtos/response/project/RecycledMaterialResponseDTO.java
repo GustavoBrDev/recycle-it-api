@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -10,10 +11,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class RecycledMaterialResponseDTO extends ProjectMaterialResponseDTO {
 
-    public RecycledMaterial type;
+    public Materials type;
 
-    public RecycledMaterialResponseDTO(com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial material) {
+    public RecycledMaterialResponseDTO(RecycledMaterial material) {
         super(material);
-        this.type = material;
+        this.type = material.getType();
     }
 }

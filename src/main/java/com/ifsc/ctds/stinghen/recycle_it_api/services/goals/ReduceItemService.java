@@ -144,14 +144,15 @@ public class ReduceItemService {
     /**
      * Incrementa a quantidade atual de um item para meta de redução
      * @param id o id do item para meta de redução
+     * @param amount a quantidade a ser incrementada
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando o item para meta de redução não for encontrado
      */
     @Transactional
-    public ResponseDTO increment(Long id) {
+    public ResponseDTO increment( Long id, Long amount) {
         if (repository.existsById(id)) {
             ReduceItem reduceItem = repository.findById(id).get();
-            reduceItem.increment();
+            reduceItem.increment(amount);
             repository.save(reduceItem);
 
             return FeedbackResponseDTO.builder()
@@ -167,14 +168,15 @@ public class ReduceItemService {
     /**
      * Decrementa a quantidade atual de um item para meta de redução
      * @param id o id do item para meta de redução
+     * @param amount a quantidade a ser decrementada
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      * @throws EntityNotFoundException quando o item para meta de redução não for encontrado
      */
     @Transactional
-    public ResponseDTO decrement(Long id) {
+    public ResponseDTO decrement(Long id, Long amount) {
         if (repository.existsById(id)) {
             ReduceItem reduceItem = repository.findById(id).get();
-            reduceItem.decrement();
+            reduceItem.decrement(amount);
             repository.save(reduceItem);
 
             return FeedbackResponseDTO.builder()

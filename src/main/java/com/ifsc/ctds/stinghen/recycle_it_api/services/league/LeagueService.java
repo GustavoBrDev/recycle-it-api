@@ -11,6 +11,9 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.league.LeagueRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,11 +30,15 @@ import java.util.stream.Collectors;
  * @see League
  * @since 22/02/2026
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class LeagueService {
 
+    @Autowired
     public LeagueRepository repository;
+
+    @Autowired
+    @Lazy
     public RegularUserService userService;
 
     /**

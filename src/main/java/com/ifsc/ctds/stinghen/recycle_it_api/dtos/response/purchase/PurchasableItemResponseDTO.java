@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public abstract class PurchasableItemResponseDTO implements ResponseDTO {
+public class PurchasableItemResponseDTO implements ResponseDTO {
 
     private Long id;
 

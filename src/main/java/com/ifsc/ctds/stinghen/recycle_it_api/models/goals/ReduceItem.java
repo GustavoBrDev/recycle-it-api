@@ -28,13 +28,13 @@ public class ReduceItem implements IItem {
     private int actualQuantity;
 
     @Override
-    public void increment() {
-        this.actualQuantity++;
+    public void increment( Long amount) {
+        this.actualQuantity+= amount;
     }
 
     @Override
-    public void decrement() {
-        this.actualQuantity--;
+    public void decrement( Long amount) {
+        this.actualQuantity-= amount;
     }
 
     @Override

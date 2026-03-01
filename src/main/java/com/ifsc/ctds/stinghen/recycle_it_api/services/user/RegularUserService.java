@@ -19,6 +19,9 @@ import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentials
 import com.ifsc.ctds.stinghen.recycle_it_api.services.article.ArticleService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.ProjectService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -38,16 +41,31 @@ import java.util.List;
  * @see PasswordEncoder
  * @since 22/02/2026
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class RegularUserService {
 
+    @Autowired
     public RegularUserRepository repository;
+
+    @Autowired
     public UserCredentialsRepository credentialsRepository;
+
+    @Autowired
     public PasswordEncoder passwordEncoder;
+
+    @Autowired
+    @Lazy
     public LeagueService leagueService;
+
+    @Autowired
+    @Lazy
     public ProjectService projectService;
+
+    @Autowired
     public ArticleService articleService;
+
+    @Autowired
     public PointsPunctuationService punctuationService;
 
     /**
