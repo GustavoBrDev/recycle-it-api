@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface UserCredentialsRepository extends JpaRepository<UserCredentials, Long> {
     Optional<UserCredentials> findByEmail(String email);
+    boolean existsByEmail(String email);
 }

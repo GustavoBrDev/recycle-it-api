@@ -9,5 +9,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface UserPunctuationRepository extends JpaRepository<UserPunctuation, Long> {
 
-    UserPunctuation findByUser_Id ( Long id );
+    /**
+     * Encontra a pontuação do usuário em uma sessão específica
+     * @param userId o ID do usuário
+     * @param sessionId o ID da sessão
+     * @return Optional contendo a pontuação, se encontrada
+     */
+    UserPunctuation findByUser_IdAndSession_Id(Long userId, Long sessionId);
 }

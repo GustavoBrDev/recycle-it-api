@@ -3,6 +3,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.purchase;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.purchase.IPurchasable;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.purchase.PurchasableItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,13 +13,19 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public abstract class PurchasableItemResponseDTO implements ResponseDTO {
+public class PurchasableItemResponseDTO implements ResponseDTO {
 
     private Long id;
 
     private Long price;
 
     private Boolean isOnSale;
+
+    public PurchasableItemResponseDTO(PurchasableItem item) {
+        this.id = item.getId();
+        this.price = item.getPrice();
+        this.isOnSale = item.getIsOnSale();
+    }
 
     @JsonProperty("type")
     public String getType() {

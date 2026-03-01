@@ -12,4 +12,6 @@ import java.util.Optional;
  * Extende JpaRepository para fornecer operações CRUD e JpaSpecificationExecutor para suporte a consultas complexas.
  */
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+
+
 }

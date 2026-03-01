@@ -2,6 +2,9 @@ package com.ifsc.ctds.stinghen.recycle_it_api.models.goals;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +25,9 @@ public abstract class Goal implements IGoal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    private User user;
+
     private Float progress;
 
     private GoalDifficult difficult;
@@ -31,4 +37,6 @@ public abstract class Goal implements IGoal {
     private LocalDate nextCheck;
 
     private Float multiplier;
+
+    private GoalStatus status;
 }

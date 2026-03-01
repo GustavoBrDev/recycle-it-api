@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.league;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import jakarta.persistence.*;
@@ -8,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,11 +25,26 @@ public class UserPunctuation implements ILeaguePunctuation{
     @ManyToOne
     private User user;
 
-    @OneToMany
-    private List<Punctuation> punctuations;
+    @ManyToOne
+    private LeagueSession session;
+
+    @OneToOne
+    private PointsPunctuation punctuation;
 
     @Override
     public Long calculateTotal() {
-        return 0L;
+
+        Long recyclePoints = punctuation.getRecyclePoints();
+        Long reusePoints = punctuation.getReusePoints();
+        Long knowledgePoints = punctuation.getKnowledgePoints();
+        Long reducePoints = punctuation.getReducePoints();
+
+        double total =
+                (recyclePoints != null ? recyclePoints : 0L)
+                        + (reusePoints != null ? reusePoints : 0L)
+                        + (knowledgePoints != null ? knowledgePoints : 0L) * 0.85
+                        + (reducePoints != null ? reducePoints : 0L) * 0.15;
+
+        return Math.round(total);
     }
 }

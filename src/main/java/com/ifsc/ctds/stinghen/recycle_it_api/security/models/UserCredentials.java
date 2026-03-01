@@ -3,6 +3,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.security.models;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,6 +15,7 @@ import java.util.Collection;
 @NoArgsConstructor
 @Data
 @Entity
+@Builder
 public class UserCredentials implements UserDetails {
 
     @Id

@@ -23,9 +23,10 @@ public class UserComment {
     @ManyToOne
     private User user;
 
+    @ManyToOne
+    private Project project;
+
     private String text;
 
     private LocalDateTime date;
-
-
 }

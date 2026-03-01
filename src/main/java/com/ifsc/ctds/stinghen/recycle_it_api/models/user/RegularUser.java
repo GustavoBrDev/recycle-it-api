@@ -1,20 +1,22 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
-import com.ifsc.ctds.stinghen.recycle_it_api.enums.League;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.article.KnowledgeArticle;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.Goal;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.league.League;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.Punctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.purchase.PurchasedItem;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -30,27 +32,119 @@ public class RegularUser extends User{
     @ManyToMany
     private List<RegularUser> friends;
 
-    @OneToMany
-    private List<FriendRequest> requests;
-
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<Punctuation> punctuations;
 
     private Avatar currentAvatar;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<PurchasedItem> purchasedItems;
+
+    @ManyToMany
+    private List<Article> articles;
 
     private Long recycleGems;
 
+    @ManyToOne
     private League actualLeague;
 
-    @OneToMany
+    @ManyToMany
     private List<Project> projects;
 
-    @OneToMany
-    private List<Goal> actualGoals;
+    @OneToMany(mappedBy = "user")
+    private List<Goal> goals;
 
-    @OneToMany
-    private List<Goal> nextGoals;
+    /**
+     * Adiciona um usuário a lista de amizade
+     * @param friend o usuário a ser adicionado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void addFriend (RegularUser friend) {
+
+        if (this.equals(friend)) {
+            throw new InvalidRelationshipException("Você não pode adicionar a si mesmo");
+        }
+
+        if (this.friends.contains(friend)) {
+            throw new InvalidRelationshipException("O usuário já é o seu amigo");
+        }
+
+        this.friends.add(friend);
+        friend.friends.add(this);
+    }
+
+    /**
+     * Remove um usuário da lista de amizade
+     * @param friend o usuário a ser removido
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void removeFriend (RegularUser friend) {
+
+        if (this.equals(friend)) {
+            throw new InvalidRelationshipException("Você não pode remover a si mesmo");
+        }
+
+        if (! this.friends.contains(friend)) {
+            throw new InvalidRelationshipException("O usuário não é o seu amigo");
+        }
+
+        this.friends.remove(friend);
+        friend.friends.remove(this);
+    }
+
+    /**
+     * Adiciona um projeto a lista de projetos em andamento
+     * @param project o projeto a ser adicionado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void addProject (Project project) {
+
+        if (this.projects.contains(project)) {
+            throw new InvalidRelationshipException("O projeto já está em andamento");
+        }
+
+        this.projects.add(project);
+    }
+
+    /**
+     * Remove um projeto da lista de projetos em andamento
+     * @param project o projeto a ser removido
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void removeProject (Project project) {
+
+        if (! this.projects.contains(project)) {
+            throw new InvalidRelationshipException("O projeto não está em andamento");
+        }
+
+        this.projects.remove(project);
+    }
+
+    /**
+     * Adiciona um artigo de conhecimento a lista de artigos lidos
+     * @param article o artigo de conhecimento a ser adicionado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void addArticle (Article article) {
+
+        if (this.articles.contains(article)) {
+            throw new InvalidRelationshipException("O artigo já foi lido pelo usuário");
+        }
+
+        this.articles.add(article);
+    }
+
+    /**
+     * Remove um artigo de conhecimento a lista de artigos lidos
+     * @param article o artigo de conhecimento a ser removido
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    public void removeArticle (Article article) {
+
+        if (! this.articles.contains(article)) {
+            throw new InvalidRelationshipException("O artigo não foi lido pelo usuário");
+        }
+
+        this.articles.remove(article);
+    }
 }
