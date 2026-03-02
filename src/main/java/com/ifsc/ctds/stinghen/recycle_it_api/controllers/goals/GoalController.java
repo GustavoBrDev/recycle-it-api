@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -55,7 +56,7 @@ public class GoalController {
      * @see GoalService#editProgress(Long, Float)
      */
     @Tag(name = "Metas", description = "Recurso para gerenciamento de metas")
-    @Operation(summary = "Atualiza o progresso da meta", description = "Atualiza o progresso de uma meta existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o progresso da meta", description = "Atualiza o progresso de uma meta existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Progresso atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -70,6 +71,7 @@ public class GoalController {
     @ApiResponse(responseCode = "404", description = "Meta não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/progress")
     public ResponseEntity<FeedbackResponseDTO> updateProgress(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -89,7 +91,7 @@ public class GoalController {
      * @see GoalService#incrementProgress(Long, Float)
      */
     @Tag(name = "Metas", description = "Recurso para gerenciamento de metas")
-    @Operation(summary = "Incrementa o progresso da meta", description = "Incrementa o progresso de uma meta existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa o progresso da meta", description = "Incrementa o progresso de uma meta existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Progresso incrementado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -104,6 +106,7 @@ public class GoalController {
     @ApiResponse(responseCode = "404", description = "Meta não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/progress/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementProgress(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -123,7 +126,7 @@ public class GoalController {
      * @see GoalService#editDifficult(Long, GoalDifficult)
      */
     @Tag(name = "Metas", description = "Recurso para gerenciamento de metas")
-    @Operation(summary = "Atualiza a dificuldade da meta", description = "Atualiza a dificuldade de uma meta existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a dificuldade da meta", description = "Atualiza a dificuldade de uma meta existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Dificuldade atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -225,7 +228,7 @@ public class GoalController {
      * @see GoalService#editMultiplier(Long, Float)
      */
     @Tag(name = "Metas", description = "Recurso para gerenciamento de metas")
-    @Operation(summary = "Atualiza o multiplicador da meta", description = "Atualiza o multiplicador de uma meta existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o multiplicador da meta", description = "Atualiza o multiplicador de uma meta existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Multiplicador atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -240,6 +243,7 @@ public class GoalController {
     @ApiResponse(responseCode = "404", description = "Meta não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/multiplier")
     public ResponseEntity<FeedbackResponseDTO> updateMultiplier(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -354,7 +358,7 @@ public class GoalController {
      * @see GoalService#editStatus(Long, GoalStatus)
      */
     @Tag(name = "Metas", description = "Recurso para gerenciamento de metas")
-    @Operation(summary = "Atualiza o status da meta", description = "Atualiza o status de uma meta existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o status da meta", description = "Atualiza o status de uma meta existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -369,6 +373,7 @@ public class GoalController {
     @ApiResponse(responseCode = "404", description = "Meta não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<FeedbackResponseDTO> updateStatus(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,

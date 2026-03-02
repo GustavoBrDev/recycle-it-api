@@ -35,7 +35,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/reduce-items")
+@RequestMapping("/goals/reduce/item")
 public class ReduceItemController {
 
     /**
@@ -56,6 +56,7 @@ public class ReduceItemController {
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
                     {
+               
                         "mainMessage": "Item para meta de redução criado",
                         "content": null,
                         "isAlert": false,

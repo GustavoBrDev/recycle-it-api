@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/recycle-goals")
+@RequestMapping("/goals/recycle")
 public class RecycleGoalController {
 
     /**
@@ -48,7 +49,6 @@ public class RecycleGoalController {
     /**
      * Método POST para criar uma nova meta de reciclagem
      * @param requestDTO A {@link RecycleGoalRequestDTO} contendo os dados da meta
-     * @param email O email do autor da meta
      * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
      * @see RecycleGoalService#create(RecycleGoalRequestDTO, String), RecycleGoalRequestDTO
      */
@@ -77,8 +77,9 @@ public class RecycleGoalController {
                         "goalFrequency": "WEEKLY"
                     }
                     """) @Valid RecycleGoalRequestDTO requestDTO,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            Authentication authentication) {
         try {
+            String email = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO, email), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
