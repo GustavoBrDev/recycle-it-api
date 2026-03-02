@@ -22,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -37,7 +39,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/user-comments")
+@RequestMapping("/projects/user-comment")
 public class UserCommentController {
 
     /**
@@ -49,7 +51,6 @@ public class UserCommentController {
     /**
      * Método POST para criar um novo comentário de usuário
      * @param comment O texto do comentário
-     * @param userEmail O email do usuário
      * @param projectId O ID do projeto
      * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
      * @see UserCommentService#create(String, String, Long)
@@ -72,9 +73,10 @@ public class UserCommentController {
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createUserComment(
             @RequestParam @Parameter(required = true, example = "Ótimo projeto de reciclagem!") String comment,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String userEmail,
-            @RequestParam @Parameter(required = true, example = "1") @NotNull @Positive Long projectId) {
+            @RequestParam @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
+            Authentication authentication) {
         try {
+            String userEmail = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.create(comment, userEmail, projectId), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -206,7 +208,7 @@ public class UserCommentController {
      * @see UserCommentService#editDate(Long, LocalDateTime)
      */
     @Tag(name = "Comentários de Usuários", description = "Recurso para gerenciamento de comentários de usuários")
-    @Operation(summary = "Atualiza a data do comentário", description = "Atualiza a data de um comentário existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data do comentário", description = "Atualiza a data de um comentário existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data do comentário atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -221,6 +223,7 @@ public class UserCommentController {
     @ApiResponse(responseCode = "404", description = "Comentário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/date")
     public ResponseEntity<FeedbackResponseDTO> updateUserCommentDate(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -278,7 +281,7 @@ public class UserCommentController {
      * @see UserCommentService#getById(Long), UserCommentResponseDTO
      */
     @Tag(name = "Comentários de Usuários", description = "Recurso para gerenciamento de comentários de usuários")
-    @Operation(summary = "Busca comentário de usuário como DTO pelo ID", description = "Busca um comentário de usuário pelo ID e retorna como DTO com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca comentário de usuário como DTO pelo ID", description = "Busca um comentário de usuário pelo ID e retorna como DTO com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Comentário encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = UserCommentResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -290,12 +293,11 @@ public class UserCommentController {
                         },
                         "text": "Ótimo projeto de reciclagem!",
                         "date": "2026-03-01T10:00:00"
-                    }
+        
                     """)))
     @ApiResponse(responseCode = "404", description = "Comentário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}/dto")
+    @GetMapping("/public/{id}/dto")
     public ResponseEntity<UserCommentResponseDTO> getUserCommentDtoById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {

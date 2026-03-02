@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/knowledge-articles")
+@RequestMapping("/articles/knowledge")
 public class KnowledgeArticleController {
 
     /**
@@ -77,7 +78,7 @@ public class KnowledgeArticleController {
                         "description": "Descrição detalhada do artigo de conhecimento",
                         "minimumTime": "PT30M",
                         "text": "Conteúdo completo do artigo de conhecimento...",
-                        "references": ["ref1", "ref2", "ref3"]
+                        "references": ["ifsc.edu.br", "salvatorianos.com.br", "ifpr.edu.br"]
                     }
                     """) @Valid KnowledgeArticleRequestDTO requestDTO,
             @RequestParam @Parameter(required = true, example = "autor@exemplo.com") String email) {
@@ -189,7 +190,7 @@ public class KnowledgeArticleController {
     @ApiResponse(responseCode = "404", description = "Artigo de conhecimento não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{id}/references")
+    @PatchMapping("/{id}/add-reference")
     public ResponseEntity<FeedbackResponseDTO> addReference(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true, example = "nova-referencia-bibliografica") String reference) {
@@ -223,7 +224,7 @@ public class KnowledgeArticleController {
     @ApiResponse(responseCode = "404", description = "Artigo de conhecimento não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @DeleteMapping("/{id}/references")
+    @DeleteMapping("/{id}/remove-reference")
     public ResponseEntity<FeedbackResponseDTO> removeReference(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true, example = "referencia-a-ser-removida") String reference) {
@@ -275,7 +276,7 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getById(Long), KnowledgeArticleResponse
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Busca artigo de conhecimento pelo ID", description = "Busca um artigo de conhecimento pelo ID e retorna o artigo com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca artigo de conhecimento pelo ID", description = "Busca um artigo de conhecimento pelo ID e retorna o artigo com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigo de conhecimento encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = KnowledgeArticleResponse.class),
             examples = @ExampleObject(value = """
@@ -290,8 +291,7 @@ public class KnowledgeArticleController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Artigo de conhecimento não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<KnowledgeArticleResponse> getKnowledgeArticleById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -338,7 +338,7 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getAll(), KnowledgeArticle
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Lista todos os artigos de conhecimento", description = "Lista todos os artigos de conhecimento e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os artigos de conhecimento", description = "Lista todos os artigos de conhecimento e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos de conhecimento listados com sucesso",
             content = @Content(schema = @Schema(implementation = KnowledgeArticleResponse.class),
             examples = @ExampleObject(value = """
@@ -363,8 +363,7 @@ public class KnowledgeArticleController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum artigo de conhecimento encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<List<KnowledgeArticle>> getAllKnowledgeArticles() {
         try {
             return new ResponseEntity<>(service.getAll(), HttpStatus.OK);
@@ -380,12 +379,11 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getAll(Pageable)
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Lista todos os artigos de conhecimento com paginação", description = "Lista todos os artigos de conhecimento com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os artigos de conhecimento com paginação", description = "Lista todos os artigos de conhecimento com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos de conhecimento listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum artigo de conhecimento encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/paged")
+    @GetMapping("/public/paged")
     public ResponseEntity<Page<KnowledgeArticle>> getAllKnowledgeArticlesPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAll(pageable), HttpStatus.OK);
@@ -459,14 +457,13 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getFiltered(String)
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Busca artigos de conhecimento filtrados sem paginação", description = "Busca artigos de conhecimento filtrados sem paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca artigos de conhecimento filtrados sem paginação", description = "Busca artigos de conhecimento filtrados sem paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos de conhecimento filtrados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum artigo de conhecimento encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/search")
+    @GetMapping("/public/search")
     public ResponseEntity<Page<KnowledgeArticleResponse>> getFilteredKnowledgeArticles(
-            @RequestParam @Parameter(required = true, example = "sustentabilidade") String search) {
+            @RequestParam @Parameter(required = true, example = "Brasil") String search) {
         try {
             return new ResponseEntity<>(service.getFiltered(search), HttpStatus.OK);
         } catch (Exception e) {
@@ -482,14 +479,13 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getFiltered(String, Pageable)
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Busca artigos de conhecimento filtrados com paginação", description = "Busca artigos de conhecimento filtrados com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca artigos de conhecimento filtrados com paginação", description = "Busca artigos de conhecimento filtrados com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos de conhecimento filtrados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum artigo de conhecimento encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/search/paged")
+    @GetMapping("/public/search/paged")
     public ResponseEntity<Page<KnowledgeArticleResponse>> getFilteredKnowledgeArticlesPaged(
-            @RequestParam @Parameter(required = true, example = "meio ambiente") String search,
+            @RequestParam @Parameter(required = true, example = "5 R") String search,
             Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getFiltered(search, pageable), HttpStatus.OK);
@@ -585,7 +581,7 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getReadArticleIdsByUserId(Long)
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Busca IDs dos artigos lidos por usuário", description = "Busca os IDs dos artigos de conhecimento lidos por um usuário e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Busca IDs dos artigos lidos por usuário", description = "Busca os IDs dos artigos de conhecimento lidos por um usuário e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "IDs de artigos encontrados com sucesso",
             content = @Content(schema = @Schema(implementation = Long.class),
             examples = @ExampleObject(value = """
@@ -594,6 +590,7 @@ public class KnowledgeArticleController {
     @ApiResponse(responseCode = "404", description = "Nenhum artigo encontrado para o usuário")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/user/{userId}/read-ids")
     public ResponseEntity<List<Long>> getReadArticleIdsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
@@ -611,7 +608,7 @@ public class KnowledgeArticleController {
      * @see KnowledgeArticleService#getReadArticlesAsArticleResponse(Long)
      */
     @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
-    @Operation(summary = "Busca artigos lidos por usuário como ArticleResponseDTO", description = "Busca os artigos de conhecimento lidos por um usuário como ArticleResponseDTO e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Busca artigos lidos por usuário como ArticleResponseDTO", description = "Busca os artigos de conhecimento lidos por um usuário como ArticleResponseDTO e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos encontrados com sucesso",
             content = @Content(schema = @Schema(implementation = ArticleResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -633,6 +630,7 @@ public class KnowledgeArticleController {
     @ApiResponse(responseCode = "404", description = "Nenhum artigo encontrado para o usuário")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/user/{userId}/read")
     public ResponseEntity<List<ArticleResponseDTO>> getReadArticlesAsArticleResponse(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {

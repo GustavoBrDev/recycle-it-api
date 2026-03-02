@@ -1,11 +1,10 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FriendRequestResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.FriendRequest;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.FriendRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -84,10 +85,10 @@ public class FriendRequestController {
      * @param id O ID da solicitação a ser atualizada
      * @param sender O novo remetente
      * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see FriendRequestService#editSender(Long, RegularUser)
+     * @see FriendRequestService#editSender(Long, User)
      */
     @Tag(name = "Solicitações de Amizade", description = "Recurso para gerenciamento de solicitações de amizade")
-    @Operation(summary = "Atualiza o remetente da solicitação de amizade", description = "Atualiza o remetente de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o remetente da solicitação de amizade", description = "Atualiza o remetente de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Remetente atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -102,6 +103,7 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/sender")
     public ResponseEntity<FeedbackResponseDTO> updateFriendRequestSender(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -126,10 +128,10 @@ public class FriendRequestController {
      * @param id O ID da solicitação a ser atualizada
      * @param target O novo alvo
      * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see FriendRequestService#editTarget(Long, RegularUser)
+     * @see FriendRequestService#editTarget(Long, User)
      */
     @Tag(name = "Solicitações de Amizade", description = "Recurso para gerenciamento de solicitações de amizade")
-    @Operation(summary = "Atualiza o alvo da solicitação de amizade", description = "Atualiza o alvo de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o alvo da solicitação de amizade", description = "Atualiza o alvo de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Alvo atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -144,6 +146,7 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/target")
     public ResponseEntity<FeedbackResponseDTO> updateFriendRequestTarget(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -171,7 +174,7 @@ public class FriendRequestController {
      * @see FriendRequestService#editSendDate(Long, LocalDateTime)
      */
     @Tag(name = "Solicitações de Amizade", description = "Recurso para gerenciamento de solicitações de amizade")
-    @Operation(summary = "Atualiza a data de envio da solicitação de amizade", description = "Atualiza a data de envio de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data de envio da solicitação de amizade", description = "Atualiza a data de envio de uma solicitação de amizade existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data de envio atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -186,6 +189,7 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/send-date")
     public ResponseEntity<FeedbackResponseDTO> updateFriendRequestSendDate(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -200,7 +204,6 @@ public class FriendRequestController {
     /**
      * Método POST para aceitar uma solicitação de amizade
      * @param id O ID da solicitação a ser aceita
-     * @param email O email do usuário que está aceitando
      * @return Um ResponseEntity contendo o feedback da aceitação e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see FriendRequestService#accept(Long, String)
      */
@@ -220,11 +223,11 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PostMapping("/{id}/accept")
+    @PatchMapping("/{id}/accept")
     public ResponseEntity<FeedbackResponseDTO> acceptFriendRequest(
-            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id, Authentication authentication ) {
         try {
+            String email = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.accept(id, email), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -234,7 +237,6 @@ public class FriendRequestController {
     /**
      * Método POST para rejeitar uma solicitação de amizade
      * @param id O ID da solicitação a ser rejeitada
-     * @param email O email do usuário que está rejeitando
      * @return Um ResponseEntity contendo o feedback da rejeição e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see FriendRequestService#reject(Long, String)
      */
@@ -254,11 +256,12 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PostMapping("/{id}/reject")
+    @PatchMapping("/{id}/reject")
     public ResponseEntity<FeedbackResponseDTO> rejectFriendRequest(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            Authentication authentication) {
         try {
+            String email = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.reject(id, email), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -268,7 +271,6 @@ public class FriendRequestController {
     /**
      * Método POST para cancelar uma solicitação de amizade
      * @param userId O ID do usuário que está cancelando
-     * @param email O email do usuário que está cancelando
      * @return Um ResponseEntity contendo o feedback do cancelamento e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see FriendRequestService#cancel(Long, String)
      */
@@ -288,11 +290,12 @@ public class FriendRequestController {
     @ApiResponse(responseCode = "404", description = "Solicitação de amizade não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PostMapping("/cancel")
+    @PatchMapping("/cancel")
     public ResponseEntity<FeedbackResponseDTO> cancelFriendRequest(
             @RequestParam @Parameter(required = true, example = "2") @NotNull @Positive Long userId,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            Authentication authentication) {
         try {
+            String email = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.cancel(userId, email), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -644,7 +647,7 @@ public class FriendRequestController {
     @GetMapping("/dto")
     public ResponseEntity<List<FriendRequestResponseDTO>> getAllFriendRequestsAsDto() {
         try {
-            return new ResponseEntity<>((List<FriendRequestResponseDTO>) service.getAllAsResponse(), HttpStatus.OK);
+            return new ResponseEntity<>( service.getAllAsResponse(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -665,7 +668,7 @@ public class FriendRequestController {
     @GetMapping("/dto/paged")
     public ResponseEntity<Page<FriendRequestResponseDTO>> getAllFriendRequestsAsDtoPaged(Pageable pageable) {
         try {
-            return new ResponseEntity<>((Page<FriendRequestResponseDTO>) service.getAllAsResponse(pageable), HttpStatus.OK);
+            return new ResponseEntity<>( service.getAllAsResponse(pageable), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

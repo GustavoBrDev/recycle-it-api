@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .formLogin( config -> config.disable())
                 .csrf(config -> config.disable())
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers( HttpMethod.POST, "api/auth/login", "api/auth/logout").permitAll()
+                    authorize.requestMatchers("/api/**", "/public/**").permitAll()
                             .anyRequest().authenticated();
                 })
                 .logout(config -> config.disable())

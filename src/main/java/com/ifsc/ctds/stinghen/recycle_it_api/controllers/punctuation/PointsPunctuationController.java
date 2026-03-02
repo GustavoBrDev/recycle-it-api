@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.constraints.NotNull;
@@ -34,7 +35,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/points-punctuations")
+@RequestMapping("/punctuations/points")
 public class PointsPunctuationController {
 
     /**
@@ -50,11 +51,12 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#create(User)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Cria uma nova pontuação por pontos", description = "Cria uma nova pontuação por pontos para um usuário e retorna o status HTTP 201")
+    @Operation(summary = "[DEV] Cria uma nova pontuação por pontos", description = "Cria uma nova pontuação por pontos para um usuário e retorna o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Pontuação por pontos criada com sucesso")
     @ApiResponse(responseCode = "400", description = "Erro ao criar pontuação por pontos")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<Void> createPointsPunctuation(
             @RequestBody @Parameter(required = true,
@@ -82,7 +84,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReducePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de redução da pontuação", description = "Atualiza os pontos de redução de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de redução da pontuação", description = "Atualiza os pontos de redução de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -97,6 +99,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/reduce-points")
     public ResponseEntity<FeedbackResponseDTO> updateReducePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -116,7 +119,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editRecyclePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reciclagem da pontuação", description = "Atualiza os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reciclagem da pontuação", description = "Atualiza os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -131,6 +134,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/recycle-points")
     public ResponseEntity<FeedbackResponseDTO> updateRecyclePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -150,7 +154,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReusePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reutilização da pontuação", description = "Atualiza os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reutilização da pontuação", description = "Atualiza os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -165,6 +169,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/reuse-points")
     public ResponseEntity<FeedbackResponseDTO> updateReusePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -184,7 +189,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editKnowledgePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de conhecimento da pontuação", description = "Atualiza os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de conhecimento da pontuação", description = "Atualiza os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -199,6 +204,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/knowledge-points")
     public ResponseEntity<FeedbackResponseDTO> updateKnowledgePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -218,7 +224,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementRecyclePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reciclagem da pontuação", description = "Incrementa os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reciclagem da pontuação", description = "Incrementa os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -233,6 +239,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/recycle-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementRecyclePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -252,7 +259,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementRecyclePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reciclagem da pontuação", description = "Decrementa os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reciclagem da pontuação", description = "Decrementa os pontos de reciclagem de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -267,6 +274,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/recycle-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementRecyclePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -286,7 +294,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementReusePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reutilização da pontuação", description = "Incrementa os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reutilização da pontuação", description = "Incrementa os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -301,6 +309,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/reuse-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementReusePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -320,7 +329,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementReusePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reutilização da pontuação", description = "Decrementa os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reutilização da pontuação", description = "Decrementa os pontos de reutilização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -335,6 +344,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/reuse-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementReusePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -354,7 +364,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementKnowledgePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de conhecimento da pontuação", description = "Incrementa os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de conhecimento da pontuação", description = "Incrementa os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -369,6 +379,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/knowledge-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementKnowledgePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -388,7 +399,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementKnowledgePoints(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de conhecimento da pontuação", description = "Decrementa os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de conhecimento da pontuação", description = "Decrementa os pontos de conhecimento de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -403,6 +414,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{id}/knowledge-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementKnowledgePoints(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -422,7 +434,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReducePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de redução por ID de usuário", description = "Atualiza os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de redução por ID de usuário", description = "Atualiza os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -437,6 +449,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/user/{userId}/reduce-points")
     public ResponseEntity<FeedbackResponseDTO> updateReducePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -456,7 +469,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReducePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de redução por email de usuário", description = "Atualiza os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de redução por email de usuário", description = "Atualiza os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -471,6 +484,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/email/{email}/reduce-points")
     public ResponseEntity<FeedbackResponseDTO> updateReducePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -490,7 +504,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editRecyclePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reciclagem por ID de usuário", description = "Atualiza os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reciclagem por ID de usuário", description = "Atualiza os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -505,6 +519,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/user/{userId}/recycle-points")
     public ResponseEntity<FeedbackResponseDTO> updateRecyclePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -524,7 +539,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editRecyclePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reciclagem por email de usuário", description = "Atualiza os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reciclagem por email de usuário", description = "Atualiza os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -539,6 +554,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/email/{email}/recycle-points")
     public ResponseEntity<FeedbackResponseDTO> updateRecyclePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -558,7 +574,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReusePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reutilização por ID de usuário", description = "Atualiza os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reutilização por ID de usuário", description = "Atualiza os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -573,6 +589,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/user/{userId}/reuse-points")
     public ResponseEntity<FeedbackResponseDTO> updateReusePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -592,7 +609,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editReusePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de reutilização por email de usuário", description = "Atualiza os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de reutilização por email de usuário", description = "Atualiza os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -607,6 +624,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/email/{email}/reuse-points")
     public ResponseEntity<FeedbackResponseDTO> updateReusePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -626,7 +644,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editKnowledgePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de conhecimento por ID de usuário", description = "Atualiza os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de conhecimento por ID de usuário", description = "Atualiza os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -641,6 +659,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/user/{userId}/knowledge-points")
     public ResponseEntity<FeedbackResponseDTO> updateKnowledgePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -660,7 +679,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#editKnowledgePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Atualiza os pontos de conhecimento por email de usuário", description = "Atualiza os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza os pontos de conhecimento por email de usuário", description = "Atualiza os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento atualizados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -675,6 +694,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/email/{email}/knowledge-points")
     public ResponseEntity<FeedbackResponseDTO> updateKnowledgePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -694,7 +714,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementReducePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de redução por ID de usuário", description = "Incrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de redução por ID de usuário", description = "Incrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -709,6 +729,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/reduce-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementReducePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -728,7 +749,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementReducePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de redução por email de usuário", description = "Incrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de redução por email de usuário", description = "Incrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -743,6 +764,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/reduce-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementReducePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -762,7 +784,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementReducePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de redução por ID de usuário", description = "Decrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de redução por ID de usuário", description = "Decrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -777,6 +799,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/reduce-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementReducePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -796,7 +819,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementReducePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de redução por email de usuário", description = "Decrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de redução por email de usuário", description = "Decrementa os pontos de redução da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de redução decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -811,6 +834,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/reduce-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementReducePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -830,7 +854,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementRecyclePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reciclagem por ID de usuário", description = "Incrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reciclagem por ID de usuário", description = "Incrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -845,6 +869,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/recycle-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementRecyclePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -864,7 +889,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementRecyclePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reciclagem por email de usuário", description = "Incrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reciclagem por email de usuário", description = "Incrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -879,6 +904,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/recycle-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementRecyclePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -898,7 +924,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementRecyclePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reciclagem por ID de usuário", description = "Decrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reciclagem por ID de usuário", description = "Decrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -913,6 +939,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/recycle-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementRecyclePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -932,7 +959,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementRecyclePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reciclagem por email de usuário", description = "Decrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reciclagem por email de usuário", description = "Decrementa os pontos de reciclagem da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reciclagem decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -947,6 +974,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/recycle-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementRecyclePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -966,7 +994,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementReusePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reutilização por ID de usuário", description = "Incrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reutilização por ID de usuário", description = "Incrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -981,6 +1009,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/reuse-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementReusePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -1000,7 +1029,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementReusePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de reutilização por email de usuário", description = "Incrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de reutilização por email de usuário", description = "Incrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1015,6 +1044,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/reuse-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementReusePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -1034,7 +1064,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementReusePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reutilização por ID de usuário", description = "Decrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reutilização por ID de usuário", description = "Decrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1049,6 +1079,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/reuse-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementReusePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -1068,7 +1099,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementReusePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de reutilização por email de usuário", description = "Decrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de reutilização por email de usuário", description = "Decrementa os pontos de reutilização da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de reutilização decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1083,6 +1114,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/reuse-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementReusePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -1102,7 +1134,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementKnowledgePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de conhecimento por ID de usuário", description = "Incrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de conhecimento por ID de usuário", description = "Incrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1117,6 +1149,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/knowledge-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementKnowledgePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -1136,7 +1169,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#incrementKnowledgePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Incrementa os pontos de conhecimento por email de usuário", description = "Incrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa os pontos de conhecimento por email de usuário", description = "Incrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento incrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1151,6 +1184,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/knowledge-points/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementKnowledgePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -1170,7 +1204,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementKnowledgePointsByUserId(Long, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de conhecimento por ID de usuário", description = "Decrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de conhecimento por ID de usuário", description = "Decrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1185,6 +1219,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/user/{userId}/knowledge-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementKnowledgePointsByUserId(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -1204,7 +1239,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#decrementKnowledgePointsByUserEmail(String, Long)
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Decrementa os pontos de conhecimento por email de usuário", description = "Decrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa os pontos de conhecimento por email de usuário", description = "Decrementa os pontos de conhecimento da pontuação mais recente de um usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontos de conhecimento decrementados com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -1219,6 +1254,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/email/{email}/knowledge-points/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementKnowledgePointsByUserEmail(
             @PathVariable @Parameter(required = true, example = "joao@exemplo.com") String email,
@@ -1410,7 +1446,7 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#getAll(), List<PointsPunctuation>
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Lista todas as pontuações por pontos", description = "Lista todas as pontuações por pontos e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todas as pontuações por pontos", description = "Lista todas as pontuações por pontos e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontuações listadas com sucesso",
             content = @Content(schema = @Schema(implementation = PointsPunctuation.class),
             examples = @ExampleObject(value = """
@@ -1438,6 +1474,7 @@ public class PointsPunctuationController {
     @ApiResponse(responseCode = "404", description = "Nenhuma pontuação encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping
     public ResponseEntity<List<PointsPunctuation>> getAllPointsPunctuations() {
         try {
@@ -1454,11 +1491,12 @@ public class PointsPunctuationController {
      * @see PointsPunctuationService#getAll(Pageable), Page<PointsPunctuation>
      */
     @Tag(name = "Pontuações por Pontos", description = "Recurso para gerenciamento de pontuações por pontos")
-    @Operation(summary = "Lista todas as pontuações por pontos com paginação", description = "Lista todas as pontuações por pontos com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todas as pontuações por pontos com paginação", description = "Lista todas as pontuações por pontos com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontuações listadas com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhuma pontuação encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/paged")
     public ResponseEntity<Page<PointsPunctuation>> getAllPointsPunctuationsPaged(Pageable pageable) {
         try {

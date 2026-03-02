@@ -1,7 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.purchase;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.purchase.PurchasableItemResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.purchase.PurchasableItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.purchase.PurchasableItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -34,7 +34,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/purchasable-items")
+@RequestMapping("/purchasables")
 public class PurchasableItemController {
 
     /**
@@ -51,7 +51,7 @@ public class PurchasableItemController {
      * @see PurchasableItemService#update(Long, PurchasableItem)
      */
     @Tag(name = "Itens Compráveis", description = "Recurso para gerenciamento de itens compráveis")
-    @Operation(summary = "Atualiza um item comprável", description = "Atualiza um item comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza um item comprável", description = "Atualiza um item comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item comprável atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -66,6 +66,7 @@ public class PurchasableItemController {
     @ApiResponse(responseCode = "404", description = "Item comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PutMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableItem(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -92,7 +93,7 @@ public class PurchasableItemController {
      * @see PurchasableItemService#editPrice(Long, Long)
      */
     @Tag(name = "Itens Compráveis", description = "Recurso para gerenciamento de itens compráveis")
-    @Operation(summary = "Atualiza o preço do item comprável", description = "Atualiza o preço de um item comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o preço do item comprável", description = "Atualiza o preço de um item comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Preço atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -107,6 +108,7 @@ public class PurchasableItemController {
     @ApiResponse(responseCode = "404", description = "Item comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/price")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableItemPrice(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -126,7 +128,7 @@ public class PurchasableItemController {
      * @see PurchasableItemService#editIsOnSale(Long, Boolean)
      */
     @Tag(name = "Itens Compráveis", description = "Recurso para gerenciamento de itens compráveis")
-    @Operation(summary = "Atualiza o status de promoção do item comprável", description = "Atualiza o status de promoção de um item comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o status de promoção do item comprável", description = "Atualiza o status de promoção de um item comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Status de promoção atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -141,6 +143,7 @@ public class PurchasableItemController {
     @ApiResponse(responseCode = "404", description = "Item comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/is-on-sale")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableItemIsOnSale(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -296,7 +299,7 @@ public class PurchasableItemController {
      * @see PurchasableItemService#deleteById(Long)
      */
     @Tag(name = "Itens Compráveis", description = "Recurso para gerenciamento de itens compráveis")
-    @Operation(summary = "Deleta um item comprável", description = "Deleta um item comprável e retorna o status HTTP 200")
+    @Operation(summary = "[DEV] Deleta um item comprável", description = "Deleta um item comprável e retorna o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item comprável deletado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -311,6 +314,7 @@ public class PurchasableItemController {
     @ApiResponse(responseCode = "404", description = "Item comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> deletePurchasableItem(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {

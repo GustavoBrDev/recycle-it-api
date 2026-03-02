@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/project-materials")
+@RequestMapping("/projects/materials")
 public class ProjectMaterialController {
 
     /**
@@ -152,7 +153,7 @@ public class ProjectMaterialController {
      * @see ProjectMaterialService#getAll(), List<ProjectMaterial>
      */
     @Tag(name = "Materiais de Projeto", description = "Recurso para gerenciamento de materiais de projeto")
-    @Operation(summary = "Lista todos os materiais de projeto", description = "Lista todos os materiais de projeto e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os materiais de projeto", description = "Lista todos os materiais de projeto e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Materiais de projeto listados com sucesso",
             content = @Content(schema = @Schema(implementation = ProjectMaterial.class),
             examples = @ExampleObject(value = """
@@ -172,6 +173,7 @@ public class ProjectMaterialController {
     @ApiResponse(responseCode = "404", description = "Nenhum material de projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping
     public ResponseEntity<List<ProjectMaterial>> getAllProjectMaterials() {
         try {
@@ -188,11 +190,12 @@ public class ProjectMaterialController {
      * @see ProjectMaterialService#getAll(Pageable), Page<ProjectMaterial>
      */
     @Tag(name = "Materiais de Projeto", description = "Recurso para gerenciamento de materiais de projeto")
-    @Operation(summary = "Lista todos os materiais de projeto com paginação", description = "Lista todos os materiais de projeto com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os materiais de projeto com paginação", description = "Lista todos os materiais de projeto com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Materiais de projeto listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum material de projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/paged")
     public ResponseEntity<Page<ProjectMaterial>> getAllProjectMaterialsPaged(Pageable pageable) {
         try {

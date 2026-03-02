@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -48,7 +49,7 @@ public class PunctuationController {
      * @see PunctuationService#editLastUpdated(Long, LocalDateTime)
      */
     @Tag(name = "Pontuações", description = "Recurso para gerenciamento de pontuações")
-    @Operation(summary = "Atualiza a data da última atualização da pontuação", description = "Atualiza a data da última atualização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data da última atualização da pontuação", description = "Atualiza a data da última atualização de uma pontuação existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data da última atualização atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -63,6 +64,7 @@ public class PunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/last-updated")
     public ResponseEntity<FeedbackResponseDTO> updatePunctuationLastUpdated(
             @PathVariable @Parameter(required = true, example = "1") Long id,
@@ -227,7 +229,7 @@ public class PunctuationController {
      * @see PunctuationService#deleteById(Long)
      */
     @Tag(name = "Pontuações", description = "Recurso para gerenciamento de pontuações")
-    @Operation(summary = "Deleta uma pontuação", description = "Deleta uma pontuação e retorna o status HTTP 200")
+    @Operation(summary = "[DEV] Deleta uma pontuação", description = "Deleta uma pontuação e retorna o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Pontuação deletada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -242,6 +244,7 @@ public class PunctuationController {
     @ApiResponse(responseCode = "404", description = "Pontuação não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> deletePunctuation(
             @PathVariable @Parameter(required = true, example = "1") Long id) {

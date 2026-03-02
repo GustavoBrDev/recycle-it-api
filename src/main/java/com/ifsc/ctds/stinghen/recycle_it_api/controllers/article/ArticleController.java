@@ -195,7 +195,7 @@ public class ArticleController {
      * @see ArticleService#getObjectById(Long), ArticleResponseDTO
      */
     @Tag(name = "Artigos", description = "Recurso para gerenciamento de artigos")
-    @Operation(summary = "Busca artigo pelo ID", description = "Busca um artigo pelo ID e retorna o artigo com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca artigo pelo ID", description = "Busca um artigo pelo ID e retorna o artigo com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigo encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = ArticleResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -208,8 +208,7 @@ public class ArticleController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Artigo não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<ArticleResponseDTO> getArticleById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -226,7 +225,7 @@ public class ArticleController {
      * @see ArticleService#getAll(), ArticleResponseDTO
      */
     @Tag(name = "Artigos", description = "Recurso para gerenciamento de artigos")
-    @Operation(summary = "Lista todos os artigos", description = "Lista todos os artigos e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os artigos", description = "Lista todos os artigos e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos listados com sucesso",
             content = @Content(schema = @Schema(implementation = ArticleResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -247,8 +246,7 @@ public class ArticleController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum artigo encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<List<ArticleResponseDTO>> getAllArticles() {
         try {
             List<Article> articles = service.getAll();
@@ -268,12 +266,11 @@ public class ArticleController {
      * @see ArticleService#getAll(Pageable)
      */
     @Tag(name = "Artigos", description = "Recurso para gerenciamento de artigos")
-    @Operation(summary = "Lista todos os artigos com paginação", description = "Lista todos os artigos com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os artigos com paginação", description = "Lista todos os artigos com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigos listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum artigo encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/paged")
+    @GetMapping("/public/paged")
     public ResponseEntity<Page<ArticleResponseDTO>> getAllArticlesPaged(Pageable pageable) {
         try {
             Page<Article> articles = service.getAll(pageable);

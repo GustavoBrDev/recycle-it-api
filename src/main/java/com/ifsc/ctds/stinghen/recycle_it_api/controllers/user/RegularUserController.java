@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class RegularUserController {
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
     @Operation(summary = "Cria um novo usuário", description = "Cria um novo usuário e retorna feedback da operação com o status HTTP 201")
-    @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso",
+    @ApiResponse(responseCode = "201", description = "Uuário criado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
                     {
@@ -73,7 +74,7 @@ public class RegularUserController {
                     {
                         "email": "usuario@exemplo.com",
                         "password": "SenhaForte123!",
-                        "avatar": "AVATAR_1",
+                        "avatar": "earth",
                         "name": "Nome do Usuário"
                     }
                     """) @Valid RegularUserRequestDTO requestDTO) {
@@ -116,7 +117,7 @@ public class RegularUserController {
                     {
                         "email": "novoemail@exemplo.com",
                         "password": "NovaSenha123!",
-                        "avatar": "AVATAR_2",
+                        "avatar": "recycle_man",
                         "name": "Novo Nome"
                     }
                     """) @Valid RegularUserPutRequestDTO requestDTO) {
@@ -153,7 +154,7 @@ public class RegularUserController {
     @PatchMapping("/{id}/avatar")
     public ResponseEntity<FeedbackResponseDTO> updateAvatar(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestBody @Parameter(required = true, example = "AVATAR_1") Avatar avatar) {
+            @RequestBody @Parameter(required = true, example = "earth") Avatar avatar) {
         try {
             return new ResponseEntity<>((FeedbackResponseDTO) service.editAvatar(id, avatar), HttpStatus.OK);
         } catch (Exception e) {
@@ -237,7 +238,7 @@ public class RegularUserController {
      * @see RegularUserService#editEmail(Long, String)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Atualiza o email do usuário", description = "Atualiza o email de um usuário existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o email do usuário", description = "Atualiza o email de um usuário existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Email atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -252,6 +253,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/email")
     public ResponseEntity<FeedbackResponseDTO> updateEmail(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -271,7 +273,7 @@ public class RegularUserController {
      * @see RegularUserService#editGems(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Atualiza as gems do usuário", description = "Atualiza a quantidade de gems de um usuário existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza as gems do usuário", description = "Atualiza a quantidade de gems de um usuário existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Gems atualizadas com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -286,6 +288,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/gems")
     public ResponseEntity<FeedbackResponseDTO> updateGems(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -305,7 +308,7 @@ public class RegularUserController {
      * @see RegularUserService#incrementGems(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Incrementa as gems do usuário", description = "Adiciona uma quantidade de gems ao usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Incrementa as gems do usuário", description = "Adiciona uma quantidade de gems ao usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Gems incrementadas com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -320,6 +323,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/gems/increment")
     public ResponseEntity<FeedbackResponseDTO> incrementGems(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -339,7 +343,7 @@ public class RegularUserController {
      * @see RegularUserService#decrementGems(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Decrementa as gems do usuário", description = "Remove uma quantidade de gems do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Decrementa as gems do usuário", description = "Remove uma quantidade de gems do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Gems decrementadas com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -354,6 +358,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/gems/decrement")
     public ResponseEntity<FeedbackResponseDTO> decrementGems(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -373,7 +378,7 @@ public class RegularUserController {
      * @see RegularUserService#addFriend(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Adiciona um amigo ao usuário", description = "Adiciona um amigo à lista de amigos do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Adiciona um amigo ao usuário", description = "Adiciona um amigo à lista de amigos do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Amigo adicionado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -388,7 +393,8 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou amigo não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{userId}/friends/{friendId}")
+    @PreAuthorize("hasRole('DEV')")
+    @PatchMapping("/{userId}/friends/add/{friendId}")
     public ResponseEntity<FeedbackResponseDTO> addFriend(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
             @PathVariable @Parameter(required = true, example = "2") @NotNull @Positive Long friendId) {
@@ -400,14 +406,14 @@ public class RegularUserController {
     }
 
     /**
-     * Método DELETE para remover um amigo do usuário
+     * Método para remover um amigo do usuário
      * @param userId O ID do usuário
      * @param friendId O ID do amigo a ser removido
      * @return Um ResponseEntity contendo o feedback da operação e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see RegularUserService#removeFriend(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Remove um amigo do usuário", description = "Remove um amigo da lista de amigos do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Remove um amigo do usuário", description = "Remove um amigo da lista de amigos do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Amigo removido com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -422,7 +428,8 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou amigo não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @DeleteMapping("/{userId}/friends/{friendId}")
+    @PreAuthorize("hasRole('DEV')")
+    @PatchMapping("/{userId}/friends/remove/{friendId}")
     public ResponseEntity<FeedbackResponseDTO> removeFriend(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
             @PathVariable @Parameter(required = true, example = "2") @NotNull @Positive Long friendId) {
@@ -456,7 +463,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{userId}/projects/{projectId}")
+    @PatchMapping("/{userId}/projects/add/{projectId}")
     public ResponseEntity<FeedbackResponseDTO> addProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId) {
@@ -468,14 +475,14 @@ public class RegularUserController {
     }
 
     /**
-     * Método DELETE para remover um projeto do usuário
+     * Método para remover um projeto do usuário
      * @param userId O ID do usuário
      * @param projectId O ID do projeto a ser removido
      * @return Um ResponseEntity contendo o feedback da operação e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see RegularUserService#removeProject(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Remove um projeto do usuário", description = "Remove um projeto da lista de projetos do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Remove um projeto do usuário", description = "Remove um projeto da lista de projetos do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto removido com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -490,7 +497,8 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @DeleteMapping("/{userId}/projects/{projectId}")
+    @PreAuthorize("hasRole('DEV')")
+    @DeleteMapping("/{userId}/projects/remove/{projectId}")
     public ResponseEntity<FeedbackResponseDTO> removeProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId) {
@@ -509,7 +517,7 @@ public class RegularUserController {
      * @see RegularUserService#addArticle(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Adiciona um artigo ao usuário", description = "Adiciona um artigo à lista de artigos do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Adiciona um artigo ao usuário", description = "Adiciona um artigo à lista de artigos do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigo adicionado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -524,6 +532,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou artigo não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{userId}/articles/{articleId}")
     public ResponseEntity<FeedbackResponseDTO> addArticle(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -543,7 +552,7 @@ public class RegularUserController {
      * @see RegularUserService#removeArticle(Long, Long)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Remove um artigo do usuário", description = "Remove um artigo da lista de artigos do usuário e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Remove um artigo do usuário", description = "Remove um artigo da lista de artigos do usuário e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Artigo removido com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -558,6 +567,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Usuário ou artigo não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{userId}/articles/{articleId}")
     public ResponseEntity<FeedbackResponseDTO> removeArticle(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
@@ -583,7 +593,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "AVATAR_1",
+                        "currentAvatar": "earth",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -620,20 +630,19 @@ public class RegularUserController {
      * @see RegularUserService#getSimpleById(Long), SimpleUserResponseDTO
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Busca usuário simplificado pelo ID", description = "Busca um usuário simplificado pelo ID e retorna o usuário com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca usuário simplificado pelo ID", description = "Busca um usuário simplificado pelo ID e retorna o usuário com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = SimpleUserResponseDTO.class),
             examples = @ExampleObject(value = """
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "AVATAR_1"
+                        "avatar": "earth"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}/simple")
+    @GetMapping("/public/{id}/simple")
     public ResponseEntity<SimpleUserResponseDTO> getSimpleById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -657,7 +666,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "AVATAR_1",
+                        "currentAvatar": "earth",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -701,7 +710,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "AVATAR_1"
+                        "avatar": "earth"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
@@ -723,7 +732,7 @@ public class RegularUserController {
      * @see RegularUserService#getAllSimple(), SimpleUserResponseDTO
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Lista todos os usuários simplificados", description = "Lista todos os usuários de forma simplificada e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os usuários simplificados", description = "Lista todos os usuários de forma simplificada e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso",
             content = @Content(schema = @Schema(implementation = SimpleUserResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -731,19 +740,18 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "avatar": "AVATAR_1"
+                            "avatar": "earth"
                         },
                         {
                             "id": 2,
                             "name": "Nome do Usuário 2",
-                            "avatar": "AVATAR_2"
+                            "avatar": "recycle_man"
                         }
                     ]
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum usuário encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/simple")
+    @GetMapping("/public/simple")
     public ResponseEntity<List<SimpleUserResponseDTO>> getAllSimple() {
         try {
             return new ResponseEntity<>(service.getAllSimple(), HttpStatus.OK);
@@ -758,7 +766,7 @@ public class RegularUserController {
      * @see RegularUserService#getAllFull(), FullUserResponseDTO
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Lista todos os usuários completos", description = "Lista todos os usuários de forma completa e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os usuários completos", description = "Lista todos os usuários de forma completa e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso",
             content = @Content(schema = @Schema(implementation = FullUserResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -766,7 +774,7 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "currentAvatar": "AVATAR_1",
+                            "currentAvatar": "earth",
                             "gems": 1000,
                             "friends": [],
                             "projects": [],
@@ -787,6 +795,7 @@ public class RegularUserController {
     @ApiResponse(responseCode = "404", description = "Nenhum usuário encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/full")
     public ResponseEntity<List<FullUserResponseDTO>> getAllFull() {
         try {
@@ -803,11 +812,12 @@ public class RegularUserController {
      * @see RegularUserService#getAll(Pageable)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Lista todos os usuários com paginação", description = "Lista todos os usuários com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os usuários com paginação", description = "Lista todos os usuários com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum usuário encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping
     public ResponseEntity<Page<FullUserResponseDTO>> getAll(Pageable pageable) {
         try {

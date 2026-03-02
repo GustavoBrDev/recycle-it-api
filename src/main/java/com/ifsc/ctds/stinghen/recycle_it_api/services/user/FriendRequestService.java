@@ -397,17 +397,11 @@ public class FriendRequestService {
      * @return uma {@link ResponseDTO} contendo lista de {@link FriendRequestResponseDTO}
      */
     @Transactional(readOnly = true)
-    public ResponseDTO getAllAsResponse() {
-        List<FriendRequestResponseDTO> friendRequests = repository.findAll().stream()
+    public List<FriendRequestResponseDTO> getAllAsResponse() {
+
+        return repository.findAll().stream()
                 .map(FriendRequestResponseDTO::new)
                 .toList();
-        
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Solicitações de amizade encontradas")
-                .content("Total de " + friendRequests.size() + " solicitações")
-                .isAlert(false)
-                .isError(false)
-                .build();
     }
 
     /**
@@ -416,16 +410,10 @@ public class FriendRequestService {
      * @return uma {@link ResponseDTO} contendo página de {@link FriendRequestResponseDTO}
      */
     @Transactional(readOnly = true)
-    public ResponseDTO getAllAsResponse(Pageable pageable) {
-        Page<FriendRequestResponseDTO> friendRequests = repository.findAll(pageable)
+    public Page<FriendRequestResponseDTO> getAllAsResponse(Pageable pageable) {
+
+        return repository.findAll(pageable)
                 .map(FriendRequestResponseDTO::new);
-        
-        return FeedbackResponseDTO.builder()
-                .mainMessage("Solicitações de amizade encontradas")
-                .content("Página " + (friendRequests.getNumber() + 1) + " de " + friendRequests.getTotalPages())
-                .isAlert(false)
-                .isError(false)
-                .build();
     }
 
     /**

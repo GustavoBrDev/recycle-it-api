@@ -31,7 +31,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/recycled-materials")
+@RequestMapping("/projects/materials/recycled")
 public class RecycledMaterialController {
 
     /**

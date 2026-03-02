@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,7 +40,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/league-sessions")
+@RequestMapping("/leagues/sessions")
 public class LeagueSessionController {
 
     /**
@@ -55,7 +56,7 @@ public class LeagueSessionController {
      * @see LeagueSessionService#create(LeagueSession), LeagueSession
      */
     @Tag(name = "Sessões de Liga", description = "Recurso para gerenciamento de sessões de liga")
-    @Operation(summary = "Cria uma nova sessão de liga", description = "Cria uma nova sessão de liga e retorna feedback da operação com o status HTTP 201")
+    @Operation(summary = "[DEV] Cria uma nova sessão de liga", description = "Cria uma nova sessão de liga e retorna feedback da operação com o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Sessão de liga criada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -69,6 +70,7 @@ public class LeagueSessionController {
     @ApiResponse(responseCode = "400", description = "Erro ao criar sessão de liga")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createLeagueSession(
             @RequestBody @Parameter(required = true,
@@ -99,7 +101,7 @@ public class LeagueSessionController {
      * @see LeagueSessionService#editStartDate(Long, LocalDate)
      */
     @Tag(name = "Sessões de Liga", description = "Recurso para gerenciamento de sessões de liga")
-    @Operation(summary = "Atualiza a data de início da sessão de liga", description = "Atualiza a data de início de uma sessão de liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data de início da sessão de liga", description = "Atualiza a data de início de uma sessão de liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data de início atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -114,6 +116,7 @@ public class LeagueSessionController {
     @ApiResponse(responseCode = "404", description = "Sessão de liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/start-date")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueSessionStartDate(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -133,7 +136,7 @@ public class LeagueSessionController {
      * @see LeagueSessionService#editEndDate(Long, LocalDate)
      */
     @Tag(name = "Sessões de Liga", description = "Recurso para gerenciamento de sessões de liga")
-    @Operation(summary = "Atualiza a data de término da sessão de liga", description = "Atualiza a data de término de uma sessão de liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data de término da sessão de liga", description = "Atualiza a data de término de uma sessão de liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data de término atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -148,6 +151,7 @@ public class LeagueSessionController {
     @ApiResponse(responseCode = "404", description = "Sessão de liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/end-date")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueSessionEndDate(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -756,7 +760,7 @@ public class LeagueSessionController {
      * @see LeagueSessionService#deleteById(Long)
      */
     @Tag(name = "Sessões de Liga", description = "Recurso para gerenciamento de sessões de liga")
-    @Operation(summary = "Deleta uma sessão de liga", description = "Deleta uma sessão de liga e retorna o status HTTP 200")
+    @Operation(summary = "[DEV] Deleta uma sessão de liga", description = "Deleta uma sessão de liga e retorna o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Sessão de liga deletada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -771,6 +775,7 @@ public class LeagueSessionController {
     @ApiResponse(responseCode = "404", description = "Sessão de liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> deleteLeagueSession(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {

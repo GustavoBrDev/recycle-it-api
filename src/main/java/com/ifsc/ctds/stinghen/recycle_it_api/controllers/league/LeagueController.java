@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class LeagueController {
      * @see LeagueService#create(LeagueRequestDTO), LeagueRequestDTO
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Cria uma nova liga", description = "Cria uma nova liga e retorna feedback da operação com o status HTTP 201")
+    @Operation(summary = "[DEV] Cria uma nova liga", description = "Cria uma nova liga e retorna feedback da operação com o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Liga criada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -67,6 +68,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "400", description = "Erro ao criar liga")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createLeague(
             @RequestBody @Parameter(required = true,
@@ -95,7 +97,7 @@ public class LeagueController {
      * @see LeagueService#update(Long, League), League
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza uma liga", description = "Atualiza uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza uma liga", description = "Atualiza uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Liga atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -110,6 +112,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PutMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> updateLeague(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -141,7 +144,7 @@ public class LeagueController {
      * @see LeagueService#editName(Long, String)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza o nome da liga", description = "Atualiza o nome de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o nome da liga", description = "Atualiza o nome de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Nome da liga atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -156,6 +159,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/name")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueName(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -175,7 +179,7 @@ public class LeagueController {
      * @see LeagueService#editTier(Long, int)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza o tier da liga", description = "Atualiza o tier de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o tier da liga", description = "Atualiza o tier de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Tier da liga atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -190,6 +194,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/tier")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueTier(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -209,7 +214,7 @@ public class LeagueController {
      * @see LeagueService#editMembersCount(Long, int)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza o número de membros da liga", description = "Atualiza o número de membros de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o número de membros da liga", description = "Atualiza o número de membros de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Número de membros atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -224,6 +229,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/members-count")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueMembersCount(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -243,7 +249,7 @@ public class LeagueController {
      * @see LeagueService#editPromotedCount(Long, int)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza o número de promovidos da liga", description = "Atualiza o número de promovidos de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o número de promovidos da liga", description = "Atualiza o número de promovidos de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Número de promovidos atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -258,6 +264,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/promoted-count")
     public ResponseEntity<FeedbackResponseDTO> updateLeaguePromotedCount(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -277,7 +284,7 @@ public class LeagueController {
      * @see LeagueService#editRelegatedCount(Long, int)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza o número de rebaixados da liga", description = "Atualiza o número de rebaixados de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o número de rebaixados da liga", description = "Atualiza o número de rebaixados de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Número de rebaixados atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -292,6 +299,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/relegated-count")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueRelegatedCount(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -311,7 +319,7 @@ public class LeagueController {
      * @see LeagueService#editPromotionEnabled(Long, boolean)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza status de promoção da liga", description = "Atualiza o status de promoção de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza status de promoção da liga", description = "Atualiza o status de promoção de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Status de promoção atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -326,6 +334,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/promotion-enabled")
     public ResponseEntity<FeedbackResponseDTO> updateLeaguePromotionEnabled(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -345,7 +354,7 @@ public class LeagueController {
      * @see LeagueService#editRelegationEnabled(Long, boolean)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Atualiza status de rebaixamento da liga", description = "Atualiza o status de rebaixamento de uma liga existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza status de rebaixamento da liga", description = "Atualiza o status de rebaixamento de uma liga existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Status de rebaixamento atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -360,6 +369,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/relegation-enabled")
     public ResponseEntity<FeedbackResponseDTO> updateLeagueRelegationEnabled(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -571,7 +581,7 @@ public class LeagueController {
      * @see LeagueService#getAll(), List<League>
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Lista todas as ligas", description = "Lista todas as ligas e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todas as ligas", description = "Lista todas as ligas e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Ligas listadas com sucesso",
             content = @Content(schema = @Schema(implementation = League.class),
             examples = @ExampleObject(value = """
@@ -600,8 +610,7 @@ public class LeagueController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhuma liga encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<List<League>> getAllLeagues() {
         try {
             return new ResponseEntity<>(service.getAll(), HttpStatus.OK);
@@ -616,7 +625,7 @@ public class LeagueController {
      * @see LeagueService#getAllSimple(), List<SimpleLeagueResponseDTO>
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Lista todas as ligas como DTO simplificado", description = "Lista todas as ligas como DTO simplificado e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todas as ligas como DTO simplificado", description = "Lista todas as ligas como DTO simplificado e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Ligas listadas com sucesso",
             content = @Content(schema = @Schema(implementation = SimpleLeagueResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -633,8 +642,7 @@ public class LeagueController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhuma liga encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/simple")
+    @GetMapping("/public/simple")
     public ResponseEntity<List<SimpleLeagueResponseDTO>> getAllSimpleLeagues() {
         try {
             return new ResponseEntity<>(service.getAllSimple(), HttpStatus.OK);
@@ -691,12 +699,11 @@ public class LeagueController {
      * @see LeagueService#getAll(Pageable), Page<League>
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Lista todas as ligas com paginação", description = "Lista todas as ligas com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todas as ligas com paginação", description = "Lista todas as ligas com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Ligas listadas com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhuma liga encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/paged")
+    @GetMapping("/public/paged")
     public ResponseEntity<Page<League>> getAllLeaguesPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAll(pageable), HttpStatus.OK);
@@ -712,12 +719,11 @@ public class LeagueController {
      * @see LeagueService#getAllSimple(Pageable), Page<SimpleLeagueResponseDTO>
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Lista todas as ligas como DTO simplificado com paginação", description = "Lista todas as ligas como DTO simplificado com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todas as ligas como DTO simplificado com paginação", description = "Lista todas as ligas como DTO simplificado com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Ligas listadas com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhuma liga encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/simple/paged")
+    @GetMapping("/public/simple/paged")
     public ResponseEntity<Page<SimpleLeagueResponseDTO>> getAllSimpleLeaguesPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAllSimple(pageable), HttpStatus.OK);
@@ -733,12 +739,11 @@ public class LeagueController {
      * @see LeagueService#getAllFull(Pageable), Page<FullLeagueResponseDTO>
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Lista todas as ligas como DTO completo com paginação", description = "Lista todas as ligas como DTO completo com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todas as ligas como DTO completo com paginação", description = "Lista todas as ligas como DTO completo com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Ligas listadas com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhuma liga encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/full/paged")
+    @GetMapping("/public/full/paged")
     public ResponseEntity<Page<FullLeagueResponseDTO>> getAllFullLeaguesPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAllFull(pageable), HttpStatus.OK);
@@ -754,7 +759,7 @@ public class LeagueController {
      * @see LeagueService#deleteById(Long)
      */
     @Tag(name = "Ligas", description = "Recurso para gerenciamento de ligas")
-    @Operation(summary = "Deleta uma liga", description = "Deleta uma liga e retorna o status HTTP 200")
+    @Operation(summary = "[DEV] Deleta uma liga", description = "Deleta uma liga e retorna o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Liga deletada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -769,6 +774,7 @@ public class LeagueController {
     @ApiResponse(responseCode = "404", description = "Liga não encontrada")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> deleteLeague(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {

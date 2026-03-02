@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -35,7 +36,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/purchasable-avatars")
+@RequestMapping("/purchasables/avatar")
 public class PurchasableAvatarController {
 
     /**
@@ -51,7 +52,7 @@ public class PurchasableAvatarController {
      * @see PurchasableAvatarService#create(PurchasableAvatar)
      */
     @Tag(name = "Avatares Compráveis", description = "Recurso para gerenciamento de avatares compráveis")
-    @Operation(summary = "Cria um novo avatar comprável", description = "Cria um novo avatar comprável e retorna feedback da operação com o status HTTP 201")
+    @Operation(summary = "[DEV] Cria um novo avatar comprável", description = "Cria um novo avatar comprável e retorna feedback da operação com o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Avatar comprável criado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -65,6 +66,7 @@ public class PurchasableAvatarController {
     @ApiResponse(responseCode = "400", description = "Erro ao criar avatar comprável")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createPurchasableAvatar(
             @RequestBody @Parameter(required = true,
@@ -91,7 +93,7 @@ public class PurchasableAvatarController {
      * @see PurchasableAvatarService#update(Long, PurchasableAvatar)
      */
     @Tag(name = "Avatares Compráveis", description = "Recurso para gerenciamento de avatares compráveis")
-    @Operation(summary = "Atualiza um avatar comprável", description = "Atualiza um avatar comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza um avatar comprável", description = "Atualiza um avatar comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Avatar comprável atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -106,6 +108,7 @@ public class PurchasableAvatarController {
     @ApiResponse(responseCode = "404", description = "Avatar comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PutMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableAvatar(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -133,7 +136,7 @@ public class PurchasableAvatarController {
      * @see PurchasableAvatarService#editAvatar(Long, Avatar)
      */
     @Tag(name = "Avatares Compráveis", description = "Recurso para gerenciamento de avatares compráveis")
-    @Operation(summary = "Atualiza o tipo de avatar do avatar comprável", description = "Atualiza o tipo de avatar de um avatar comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o tipo de avatar do avatar comprável", description = "Atualiza o tipo de avatar de um avatar comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Tipo de avatar atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -148,6 +151,7 @@ public class PurchasableAvatarController {
     @ApiResponse(responseCode = "404", description = "Avatar comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/avatar-type")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableAvatarType(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -362,38 +366,6 @@ public class PurchasableAvatarController {
             return new ResponseEntity<>(service.getAllOnSale(pageable), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Método DELETE para deletar um avatar comprável
-     * @param id O ID do avatar a ser deletado
-     * @return Um ResponseEntity contendo o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see PurchasableAvatarService#deleteById(Long)
-     */
-    @Tag(name = "Avatares Compráveis", description = "Recurso para gerenciamento de avatares compráveis")
-    @Operation(summary = "Deleta um avatar comprável", description = "Deleta um avatar comprável e retorna o status HTTP 200")
-    @ApiResponse(responseCode = "200", description = "Avatar comprável deletado com sucesso",
-            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
-            examples = @ExampleObject(value = """
-                    {
-                        "mainMessage": "Avatar comprável deletado",
-                        "content": null,
-                        "isAlert": false,
-                        "isError": false
-                    }
-                    """)))
-    @ApiResponse(responseCode = "400", description = "Erro ao deletar avatar comprável")
-    @ApiResponse(responseCode = "404", description = "Avatar comprável não encontrado")
-    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<FeedbackResponseDTO> deletePurchasableAvatar(
-            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
-        try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.deleteById(id), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

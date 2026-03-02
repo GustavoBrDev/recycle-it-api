@@ -26,6 +26,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -282,7 +284,6 @@ public class ProjectController {
 
     /**
      * Método POST para iniciar um projeto
-     * @param email O email do usuário que está iniciando
      * @param projectId O ID do projeto a ser iniciado
      * @return Um ResponseEntity contendo o feedback do início e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
      * @see ProjectService#start(String, Long)
@@ -306,8 +307,9 @@ public class ProjectController {
     @PostMapping("/{projectId}/start")
     public ResponseEntity<FeedbackResponseDTO> startProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            Authentication authentication) {
         try {
+            String email = authentication.getName();
             return new ResponseEntity<>((FeedbackResponseDTO) service.start(email, projectId), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -322,7 +324,7 @@ public class ProjectController {
      * @see ProjectService#finalize(RegularUser, Long)
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Finaliza um projeto", description = "Finaliza um projeto existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Finaliza um projeto", description = "Finaliza um projeto existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto finalizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -337,6 +339,7 @@ public class ProjectController {
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping("/{projectId}/finalize")
     public ResponseEntity<FeedbackResponseDTO> finalizeProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
@@ -363,7 +366,7 @@ public class ProjectController {
      * @see ProjectService#getProjectMaterials(Long), List<ProjectMaterial>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca materiais do projeto", description = "Busca os materiais de um projeto pelo ID e retorna a lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca materiais do projeto", description = "Busca os materiais de um projeto pelo ID e retorna a lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Materiais encontrados com sucesso",
             content = @Content(schema = @Schema(implementation = ProjectMaterial.class),
             examples = @ExampleObject(value = """
@@ -382,8 +385,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{projectId}/materials")
+    @GetMapping("/public/{projectId}/materials")
     public ResponseEntity<List<ProjectMaterial>> getProjectMaterials(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId) {
         try {
@@ -400,7 +402,7 @@ public class ProjectController {
      * @see ProjectService#getObjectById(Long), Project
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projeto pelo ID", description = "Busca um projeto pelo ID e retorna o projeto com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projeto pelo ID", description = "Busca um projeto pelo ID e retorna o projeto com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = Project.class),
             examples = @ExampleObject(value = """
@@ -420,8 +422,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<Project> getProjectById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -438,7 +439,7 @@ public class ProjectController {
      * @see ProjectService#getFullById(Long), FullProjectResponseDTO
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projeto completo como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO completo com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projeto completo como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO completo com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = FullProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -459,8 +460,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}/full")
+    @GetMapping("/public/{id}/full")
     public ResponseEntity<FullProjectResponseDTO> getFullProjectById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -477,7 +477,7 @@ public class ProjectController {
      * @see ProjectService#getResponseById(Long), ProjectResponseDTO
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projeto como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projeto como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -498,8 +498,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}/dto")
+    @GetMapping("/public/{id}/dto")
     public ResponseEntity<ProjectResponseDTO> getProjectDtoById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -516,7 +515,7 @@ public class ProjectController {
      * @see ProjectService#getQuickById(Long), QuickProjectResponseDTO
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projeto resumido como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO resumido com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projeto resumido como DTO pelo ID", description = "Busca um projeto pelo ID e retorna como DTO resumido com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projeto encontrado com sucesso",
             content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -534,8 +533,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/{id}/quick")
+    @GetMapping("/public/{id}/quick")
     public ResponseEntity<QuickProjectResponseDTO> getQuickProjectById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -551,7 +549,7 @@ public class ProjectController {
      * @see ProjectService#getAll(), List<Project>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos", description = "Lista todos os projetos e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os projetos", description = "Lista todos os projetos e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso",
             content = @Content(schema = @Schema(implementation = Project.class),
             examples = @ExampleObject(value = """
@@ -587,6 +585,7 @@ public class ProjectController {
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping
     public ResponseEntity<List<Project>> getAllProjects() {
         try {
@@ -602,7 +601,7 @@ public class ProjectController {
      * @see ProjectService#getAllQuick(), List<QuickProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO resumido", description = "Lista todos os projetos como DTO resumido e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO resumido", description = "Lista todos os projetos como DTO resumido e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso",
             content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -633,8 +632,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/quick")
+    @GetMapping("/public/quick")
     public ResponseEntity<List<QuickProjectResponseDTO>> getAllQuickProjects() {
         try {
             return new ResponseEntity<>(service.getAllQuick(), HttpStatus.OK);
@@ -649,7 +647,7 @@ public class ProjectController {
      * @see ProjectService#getAllResponse(), List<ProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO", description = "Lista todos os projetos como DTO e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO", description = "Lista todos os projetos como DTO e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso",
             content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -686,8 +684,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/dto")
+    @GetMapping("/public/dto")
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsAsDto() {
         try {
             return new ResponseEntity<>(service.getAllResponse(), HttpStatus.OK);
@@ -702,7 +699,7 @@ public class ProjectController {
      * @see ProjectService#getAllFull(), List<FullProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO completo", description = "Lista todos os projetos como DTO completo e retorna uma lista com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO completo", description = "Lista todos os projetos como DTO completo e retorna uma lista com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso",
             content = @Content(schema = @Schema(implementation = FullProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -739,8 +736,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/full")
+    @GetMapping("/public/full")
     public ResponseEntity<List<FullProjectResponseDTO>> getAllFullProjects() {
         try {
             return new ResponseEntity<>(service.getAllFull(), HttpStatus.OK);
@@ -756,11 +752,12 @@ public class ProjectController {
      * @see ProjectService#getAll(Pageable), Page<Project>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos com paginação", description = "Lista todos os projetos com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[DEV] Lista todos os projetos com paginação", description = "Lista todos os projetos com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @GetMapping("/paged")
     public ResponseEntity<Page<Project>> getAllProjectsPaged(Pageable pageable) {
         try {
@@ -777,12 +774,11 @@ public class ProjectController {
      * @see ProjectService#getAllQuick(Pageable), Page<QuickProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO resumido com paginação", description = "Lista todos os projetos como DTO resumido com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO resumido com paginação", description = "Lista todos os projetos como DTO resumido com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/quick/paged")
+    @GetMapping("/public/quick/paged")
     public ResponseEntity<Page<QuickProjectResponseDTO>> getAllQuickProjectsPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAllQuick(pageable), HttpStatus.OK);
@@ -798,12 +794,11 @@ public class ProjectController {
      * @see ProjectService#getAllResponse(Pageable), Page<ProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO com paginação", description = "Lista todos os projetos como DTO com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO com paginação", description = "Lista todos os projetos como DTO com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/dto/paged")
+    @GetMapping("/public/dto/paged")
     public ResponseEntity<Page<ProjectResponseDTO>> getAllProjectsAsDtoPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAllResponse(pageable), HttpStatus.OK);
@@ -819,12 +814,11 @@ public class ProjectController {
      * @see ProjectService#getAllFull(Pageable), Page<FullProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Lista todos os projetos como DTO completo com paginação", description = "Lista todos os projetos como DTO completo com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Lista todos os projetos como DTO completo com paginação", description = "Lista todos os projetos como DTO completo com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos listados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/full/paged")
+    @GetMapping("/public/full/paged")
     public ResponseEntity<Page<FullProjectResponseDTO>> getAllFullProjectsPaged(Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getAllFull(pageable), HttpStatus.OK);
@@ -840,7 +834,7 @@ public class ProjectController {
      * @see ProjectService#getFiltered(String), Page<ProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projetos filtrados", description = "Busca projetos filtrados por termo de busca e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projetos filtrados", description = "Busca projetos filtrados por termo de busca e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
             content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -863,8 +857,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/filtered")
+    @GetMapping("/public/filtered")
     public ResponseEntity<Page<ProjectResponseDTO>> getFilteredProjects(
             @RequestParam @Parameter(required = true, example = "plástico") String search) {
         try {
@@ -905,7 +898,7 @@ public class ProjectController {
      * @see ProjectService#getFilteredAsQuick(String), Page<QuickProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projetos filtrados como DTO resumido", description = "Busca projetos filtrados por termo de busca e retorna como DTO resumido com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projetos filtrados como DTO resumido", description = "Busca projetos filtrados por termo de busca e retorna como DTO resumido com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
             content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -925,8 +918,7 @@ public class ProjectController {
                     """)))
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/filtered/quick")
+    @GetMapping("/public/filtered/quick")
     public ResponseEntity<Page<QuickProjectResponseDTO>> getFilteredProjectsAsQuick(
             @RequestParam @Parameter(required = true, example = "plástico") String search) {
         try {

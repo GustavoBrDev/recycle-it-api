@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -52,7 +53,7 @@ public class PurchasedItemController {
      * @see PurchasedItemService#create(PurchasedItem)
      */
     @Tag(name = "Itens Comprados", description = "Recurso para gerenciamento de itens comprados")
-    @Operation(summary = "Cria um novo item comprado", description = "Cria um novo item comprado e retorna feedback da operação com o status HTTP 201")
+    @Operation(summary = "[DEV] Cria um novo item comprado", description = "Cria um novo item comprado e retorna feedback da operação com o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Item comprado criado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -66,6 +67,7 @@ public class PurchasedItemController {
     @ApiResponse(responseCode = "400", description = "Erro ao criar item comprado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createPurchasedItem(
             @RequestBody @Parameter(required = true,
@@ -100,7 +102,7 @@ public class PurchasedItemController {
      * @see PurchasedItemService#update(Long, PurchasedItem)
      */
     @Tag(name = "Itens Comprados", description = "Recurso para gerenciamento de itens comprados")
-    @Operation(summary = "Atualiza um item comprado", description = "Atualiza um item comprado existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza um item comprado", description = "Atualiza um item comprado existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item comprado atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -115,6 +117,7 @@ public class PurchasedItemController {
     @ApiResponse(responseCode = "404", description = "Item comprado não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PutMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasedItem(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -150,7 +153,7 @@ public class PurchasedItemController {
      * @see PurchasedItemService#editItem(Long, PurchasableItem)
      */
     @Tag(name = "Itens Comprados", description = "Recurso para gerenciamento de itens comprados")
-    @Operation(summary = "Atualiza o item do item comprado", description = "Atualiza o item de um item comprado existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza o item do item comprado", description = "Atualiza o item de um item comprado existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item do item comprado atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -165,6 +168,7 @@ public class PurchasedItemController {
     @ApiResponse(responseCode = "404", description = "Item comprado não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/item")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasedItemItem(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -192,7 +196,7 @@ public class PurchasedItemController {
      * @see PurchasedItemService#editPurchaseDate(Long, LocalDateTime)
      */
     @Tag(name = "Itens Comprados", description = "Recurso para gerenciamento de itens comprados")
-    @Operation(summary = "Atualiza a data de compra do item comprado", description = "Atualiza a data de compra de um item comprado existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza a data de compra do item comprado", description = "Atualiza a data de compra de um item comprado existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Data de compra atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -207,6 +211,7 @@ public class PurchasedItemController {
     @ApiResponse(responseCode = "404", description = "Item comprado não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PatchMapping("/{id}/purchase-date")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasedItemPurchaseDate(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -456,7 +461,7 @@ public class PurchasedItemController {
      * @see PurchasedItemService#deleteById(Long)
      */
     @Tag(name = "Itens Comprados", description = "Recurso para gerenciamento de itens comprados")
-    @Operation(summary = "Deleta um item comprado", description = "Deleta um item comprado e retorna o status HTTP 200")
+    @Operation(summary = "[DEV] Deleta um item comprado", description = "Deleta um item comprado e retorna o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item comprado deletado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -471,6 +476,7 @@ public class PurchasedItemController {
     @ApiResponse(responseCode = "404", description = "Item comprado não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @DeleteMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> deletePurchasedItem(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {

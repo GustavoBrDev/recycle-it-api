@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/purchasable-skip-comments")
+@RequestMapping("/purchasables/skip-comment")
 public class PurchasableSkipCommentController {
 
     /**
@@ -50,7 +51,7 @@ public class PurchasableSkipCommentController {
      * @see PurchasableSkipCommentService#create(PurchasableSkipComment)
      */
     @Tag(name = "Itens de Pular Comentário Compráveis", description = "Recurso para gerenciamento de itens de pular comentário compráveis")
-    @Operation(summary = "Cria um novo item de pular comentário comprável", description = "Cria um novo item de pular comentário comprável e retorna feedback da operação com o status HTTP 201")
+    @Operation(summary = "[DEV] Cria um novo item de pular comentário comprável", description = "Cria um novo item de pular comentário comprável e retorna feedback da operação com o status HTTP 201")
     @ApiResponse(responseCode = "201", description = "Item de pular comentário comprável criado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -64,6 +65,7 @@ public class PurchasableSkipCommentController {
     @ApiResponse(responseCode = "400", description = "Erro ao criar item de pular comentário comprável")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PostMapping
     public ResponseEntity<FeedbackResponseDTO> createPurchasableSkipComment(
             @RequestBody @Parameter(required = true,
@@ -89,7 +91,7 @@ public class PurchasableSkipCommentController {
      * @see PurchasableSkipCommentService#update(Long, PurchasableSkipComment)
      */
     @Tag(name = "Itens de Pular Comentário Compráveis", description = "Recurso para gerenciamento de itens de pular comentário compráveis")
-    @Operation(summary = "Atualiza um item de pular comentário comprável", description = "Atualiza um item de pular comentário comprável existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "[DEV] Atualiza um item de pular comentário comprável", description = "Atualiza um item de pular comentário comprável existente e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Item de pular comentário comprável atualizado com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
@@ -104,6 +106,7 @@ public class PurchasableSkipCommentController {
     @ApiResponse(responseCode = "404", description = "Item de pular comentário comprável não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
     @PutMapping("/{id}")
     public ResponseEntity<FeedbackResponseDTO> updatePurchasableSkipComment(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
@@ -287,38 +290,6 @@ public class PurchasableSkipCommentController {
             return new ResponseEntity<>(service.getAllOnSale(pageable), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Método DELETE para deletar um item de pular comentário comprável
-     * @param id O ID do item a ser deletado
-     * @return Um ResponseEntity contendo o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see PurchasableSkipCommentService#deleteById(Long)
-     */
-    @Tag(name = "Itens de Pular Comentário Compráveis", description = "Recurso para gerenciamento de itens de pular comentário compráveis")
-    @Operation(summary = "Deleta um item de pular comentário comprável", description = "Deleta um item de pular comentário comprável e retorna o status HTTP 200")
-    @ApiResponse(responseCode = "200", description = "Item de pular comentário comprável deletado com sucesso",
-            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
-            examples = @ExampleObject(value = """
-                    {
-                        "mainMessage": "Item de pular comentário comprável deletado",
-                        "content": null,
-                        "isAlert": false,
-                        "isError": false
-                    }
-                    """)))
-    @ApiResponse(responseCode = "400", description = "Erro ao deletar item de pular comentário comprável")
-    @ApiResponse(responseCode = "404", description = "Item de pular comentário comprável não encontrado")
-    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<FeedbackResponseDTO> deletePurchasableSkipComment(
-            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
-        try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.deleteById(id), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

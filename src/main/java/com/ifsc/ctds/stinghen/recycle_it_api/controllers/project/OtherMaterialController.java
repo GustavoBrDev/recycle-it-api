@@ -1,9 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.project;
 
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.OtherMaterialRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.FullOtherMaterialResponseDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.OtherMaterialResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.OtherMaterials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.OtherMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.OtherMaterialService;
@@ -15,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -37,7 +33,7 @@ import java.util.List;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/other-materials")
+@RequestMapping("/projects/materials/other")
 public class OtherMaterialController {
 
     /**
