@@ -1369,7 +1369,6 @@ public class PointsPunctuationController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-}
 
     /**
      * Método GET para buscar uma pontuação por pontos pelo ID
