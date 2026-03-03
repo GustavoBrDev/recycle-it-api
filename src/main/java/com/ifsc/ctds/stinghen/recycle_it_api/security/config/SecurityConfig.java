@@ -1,5 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.security.config;
 
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -37,7 +39,7 @@ public class SecurityConfig {
                 .formLogin( config -> config.disable())
                 .csrf(config -> config.disable())
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers( HttpMethod.POST, "api/auth/login", "api/auth/logout").permitAll()
+                    authorize.requestMatchers("/api/**", "/public/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                             .anyRequest().authenticated();
                 })
                 .logout(config -> config.disable())
