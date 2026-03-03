@@ -48,6 +48,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         } catch ( CookieNotFoundException e ) {
             filterChain.doFilter(request, response);
+            return;
         } catch ( TokenExpiredException | SignatureVerificationException e ) {
             response.setStatus(403);
             return;
