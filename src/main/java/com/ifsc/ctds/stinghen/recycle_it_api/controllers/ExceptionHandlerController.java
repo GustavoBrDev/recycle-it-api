@@ -14,6 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -23,9 +24,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestControllerAdvice
-public class ExceptionHandler {
+public class ExceptionHandlerController {
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<FeedbackResponseDTO> handleNotFoundException(NotFoundException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Recurso não encontrado")
@@ -38,7 +39,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.NOT_FOUND);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(BadValueException.class)
+    @ExceptionHandler(BadValueException.class)
     public ResponseEntity<FeedbackResponseDTO> handleBadValueException(BadValueException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Valor inválido")
@@ -51,7 +52,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(DeniedRequestException.class)
+    @ExceptionHandler(DeniedRequestException.class)
     public ResponseEntity<FeedbackResponseDTO> handleDeniedRequestException(DeniedRequestException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Requisição negada")
@@ -64,7 +65,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.FORBIDDEN);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(InvalidRelationshipException.class)
+    @ExceptionHandler(InvalidRelationshipException.class)
     public ResponseEntity<FeedbackResponseDTO> handleInvalidRelationshipException(InvalidRelationshipException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Relacionamento inválido")
@@ -77,7 +78,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<FeedbackResponseDTO> handleValidationException(MethodArgumentNotValidException exception) {
         List<String> errors = new ArrayList<>();
         exception.getBindingResult().getFieldErrors().forEach(error -> 
@@ -98,7 +99,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<FeedbackResponseDTO> handleTypeMismatchException(MethodArgumentTypeMismatchException exception) {
         String error = String.format("Parameter '%s' should be of type %s", 
                 exception.getName(), 
@@ -115,7 +116,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(MissingServletRequestParameterException.class)
+    @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<FeedbackResponseDTO> handleMissingParameterException(MissingServletRequestParameterException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Parâmetro obrigatório ausente")
@@ -128,7 +129,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(HttpMessageNotReadableException.class)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<FeedbackResponseDTO> handleMessageNotReadableException(HttpMessageNotReadableException exception) {
         String error = "Malformed JSON request";
         if (exception.getCause() != null) {
@@ -146,7 +147,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(NoHandlerFoundException.class)
+    @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<FeedbackResponseDTO> handleNoHandlerFoundException(NoHandlerFoundException exception) {
         String error = String.format("No handler found for %s %s", 
                 exception.getHttpMethod(), 
@@ -163,7 +164,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.NOT_FOUND);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<FeedbackResponseDTO> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException exception) {
         String error = String.format("Method %s is not supported for this endpoint. Supported methods: %s", 
                 exception.getMethod(), 
@@ -180,7 +181,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<FeedbackResponseDTO> handleAccessDeniedException(AccessDeniedException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Acesso negado")
@@ -193,7 +194,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.FORBIDDEN);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(AuthenticationException.class)
+    @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<FeedbackResponseDTO> handleAuthenticationException(AuthenticationException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Falha na autenticação")
@@ -206,7 +207,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.UNAUTHORIZED);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(BadCredentialsException.class)
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<FeedbackResponseDTO> handleBadCredentialsException(BadCredentialsException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Credenciais inválidas")
@@ -219,7 +220,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.UNAUTHORIZED);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<FeedbackResponseDTO> handleIllegalArgumentException(IllegalArgumentException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Argumento ilegal")
@@ -232,7 +233,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalStateException.class)
+    @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<FeedbackResponseDTO> handleIllegalStateException(IllegalStateException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Estado ilegal")
@@ -245,7 +246,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(NullPointerException.class)
+    @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<FeedbackResponseDTO> handleNullPointerException(NullPointerException exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Erro interno do servidor")
@@ -258,7 +259,7 @@ public class ExceptionHandler {
         return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<FeedbackResponseDTO> handleGenericException(Exception exception) {
         FeedbackResponseDTO responseDTO = FeedbackResponseDTO.builder()
                 .mainMessage("Erro não esperado")

@@ -38,6 +38,7 @@ public class RegularUserRequestDTO implements ConvertibleRequestDTO<RegularUser>
                                 .enabled(true)
                                 .accountNonLocked(true)
                                 .accountNonExpired(true)
+                                .credentialsNonExpired(true)
                                 .email(email)
                                 .password(password)
                                 .build()

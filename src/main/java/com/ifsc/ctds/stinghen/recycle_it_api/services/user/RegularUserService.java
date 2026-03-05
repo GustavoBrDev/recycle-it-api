@@ -87,6 +87,7 @@ public class RegularUserService {
         }
 
         user.getCredential().setPassword( passwordEncoder.encode(user.getCredential().getPassword()));
+        credentialsRepository.save(user.getCredential());
         user = repository.save(user);
         punctuationService.create(user);
 

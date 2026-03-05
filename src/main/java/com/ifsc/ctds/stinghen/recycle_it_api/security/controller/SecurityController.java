@@ -95,6 +95,7 @@ public class SecurityController {
         try {
             return new ResponseEntity<>((FeedbackResponseDTO) userService.create(requestDTO), HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
