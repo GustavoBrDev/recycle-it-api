@@ -6,6 +6,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.config.StrongPassword;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.models.UserCredentials;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ public class RegularUserRequestDTO implements ConvertibleRequestDTO<RegularUser>
     @StrongPassword
     public String password;
 
-    @NotBlank
+    @NotNull
     public Avatar avatar;
 
     @NotBlank

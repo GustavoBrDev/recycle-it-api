@@ -47,45 +47,6 @@ public class RegularUserController {
     private RegularUserService service;
 
     /**
-     * Método POST para criar um novo usuário
-     * @param requestDTO A {@link RegularUserRequestDTO} contendo os dados do usuário
-     * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
-     * @see RegularUserService#create(RegularUserRequestDTO), RegularUserRequestDTO
-     */
-    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Cria um novo usuário", description = "Cria um novo usuário e retorna feedback da operação com o status HTTP 201")
-    @ApiResponse(responseCode = "201", description = "Uuário criado com sucesso",
-            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
-            examples = @ExampleObject(value = """
-                    {
-                        "mainMessage": "Cadastro Efetuado",
-                        "content": null,
-                        "isAlert": false,
-                        "isError": false
-                    }
-                    """)))
-    @ApiResponse(responseCode = "400", description = "Erro ao criar usuário - email já existe ou dados inválidos")
-    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @PostMapping
-    public ResponseEntity<FeedbackResponseDTO> createUser(
-            @RequestBody @Parameter(required = true, 
-            content = @Content(schema = @Schema(implementation = RegularUserRequestDTO.class)),
-            example = """
-                    {
-                        "email": "usuario@exemplo.com",
-                        "password": "SenhaForte123!",
-                        "avatar": "earth",
-                        "name": "Nome do Usuário"
-                    }
-                    """) @Valid RegularUserRequestDTO requestDTO) {
-        try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * Método PUT para atualizar um usuário existente
      * @param id O ID do usuário a ser atualizado
      * @param requestDTO A {@link RegularUserPutRequestDTO} contendo os dados do usuário
@@ -154,7 +115,7 @@ public class RegularUserController {
     @PatchMapping("/{id}/avatar")
     public ResponseEntity<FeedbackResponseDTO> updateAvatar(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestBody @Parameter(required = true, example = "earth") Avatar avatar) {
+            @RequestBody @Parameter(required = true, example = "terra") Avatar avatar) {
         try {
             return new ResponseEntity<>((FeedbackResponseDTO) service.editAvatar(id, avatar), HttpStatus.OK);
         } catch (Exception e) {
@@ -593,7 +554,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "earth",
+                        "currentAvatar": "terra",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -637,7 +598,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "earth"
+                        "avatar": "terra"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
@@ -666,7 +627,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "earth",
+                        "currentAvatar": "terra",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -710,7 +671,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "earth"
+                        "avatar": "terra"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
@@ -740,7 +701,7 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "avatar": "earth"
+                            "avatar": "terra"
                         },
                         {
                             "id": 2,
@@ -774,7 +735,7 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "currentAvatar": "earth",
+                            "currentAvatar": "terra",
                             "gems": 1000,
                             "friends": [],
                             "projects": [],

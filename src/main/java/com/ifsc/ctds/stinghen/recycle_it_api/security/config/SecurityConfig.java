@@ -36,12 +36,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .formLogin( config -> config.disable())
+                .formLogin(config -> config.disable())
                 .csrf(config -> config.disable())
-                .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers("/api/**", "/public/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-                            .anyRequest().authenticated();
-                })
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/auth/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .logout(config -> config.disable())
                 .build();
     }
