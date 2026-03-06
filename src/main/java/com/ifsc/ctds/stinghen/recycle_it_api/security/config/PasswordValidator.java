@@ -6,7 +6,7 @@ import jakarta.validation.ConstraintValidatorContext;
 public class PasswordValidator implements ConstraintValidator<StrongPassword, String> {
 
     private static final String PASSWORD_PATTERN =
-            "^(?=(?:.*\\d){2,})(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{12}$";
+            "^(?=(?:.*\\d){2,})(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{12,}$";
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

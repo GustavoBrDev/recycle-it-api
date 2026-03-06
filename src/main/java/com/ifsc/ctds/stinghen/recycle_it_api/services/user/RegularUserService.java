@@ -5,6 +5,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserReques
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
@@ -15,6 +16,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.security.models.UserCredentials;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.article.ArticleService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
@@ -629,6 +631,17 @@ public class RegularUserService {
     }
 
     /**
+     * Obtém informações do usuário atual
+     * @param email o e-mail do usuário
+     * @return o usuário em forma da DTO {@link MeResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional (readOnly = true)
+    public ResponseDTO getMe ( String email ){
+        return new MeResponseDTO(getObjectByEmail(email));
+    }
+
+    /**
      * Obtém todos os usuários
      * @return lista de usuários em forma de {@link RegularUser}
      */
@@ -773,4 +786,6 @@ public class RegularUserService {
     public Page<RegularUser> getByActualLeagueId(Long leagueId, Pageable pageable) {
         return repository.findByActualLeague_Id(leagueId, pageable);
     }
+
+
 }

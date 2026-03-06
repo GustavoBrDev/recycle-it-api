@@ -3,7 +3,9 @@ package com.ifsc.ctds.stinghen.recycle_it_api.controllers.user;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserPutRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -537,6 +540,34 @@ public class RegularUserController {
             return new ResponseEntity<>((FeedbackResponseDTO) service.removeArticle(userId, articleId), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Método GET para buscar informações necessárias do próprio usuário
+     * @return Um ResponseEntity contendo o usuário simplificado e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getMe(String), MeResponseDTO
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Busca usuário simplificado pelo email", description = "Busca um usuário simplificado pelo email e retorna o usuário com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso",
+            content = @Content(schema = @Schema(implementation = MeResponseDTO.class),
+                    examples = @ExampleObject(value = """
+                    {
+                        "email": "gustavo.s041@aluno.ifsc.edu.br",
+                        "avatar": "terra"
+                    }
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/me")
+    public ResponseEntity<ResponseDTO> getMe(Authentication authentication ) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>( service.getMe( email ), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
