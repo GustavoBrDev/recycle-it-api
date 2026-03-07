@@ -18,12 +18,15 @@ public class QuickProjectResponseDTO implements ResponseDTO {
 
     public Long id;
 
+    public String title;
+
     public String description;
 
-    private List<ProjectMaterialResponseDTO> materials;
+    public List<ProjectMaterialResponseDTO> materials;
 
     public QuickProjectResponseDTO(Project project) {
         this.id = project.getId();
+        this.title = project.getTitle();
         this.description = project.getDescription();
         
         this.materials = project.getMaterials() != null

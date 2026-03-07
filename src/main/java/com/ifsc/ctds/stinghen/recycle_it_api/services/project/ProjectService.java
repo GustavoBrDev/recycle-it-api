@@ -24,7 +24,6 @@ import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceGoalService;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +98,7 @@ public class ProjectService {
                         "Projeto não encontrado com id: " + id
                 ));
 
-        existingProject.setText(requestDTO.text);
+        existingProject.setTitle(requestDTO.title);
         existingProject.setDescription(requestDTO.description);
         existingProject.setMaterials(
                 requestDTO.materials.stream()
@@ -128,7 +127,7 @@ public class ProjectService {
     public ResponseDTO editText(Long id, String text) {
         if (repository.existsById(id)) {
             Project project = repository.findById(id).get();
-            project.setText(text);
+            project.setTitle(text);
             repository.save(project);
 
             return FeedbackResponseDTO.builder()

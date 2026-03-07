@@ -1,10 +1,13 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.repository.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -17,4 +20,22 @@ public interface RegularUserRepository extends JpaRepository<RegularUser, Long>,
     List<RegularUser> findByActualLeague_Id(Long leagueId);
 
     Page<RegularUser> findByActualLeague_Id(Long leagueId, Pageable pageable);
+
+    /**
+     * Busca os projetos de um usuário pelo ID do usuário como QuickProjectResponseDTO
+     * @param userId o ID do usuário
+     * @return lista de QuickProjectResponseDTO
+     */
+    @Query("SELECT new com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO(p) " +
+           "FROM RegularUser u JOIN u.projects p WHERE u.id = :userId")
+    List<QuickProjectResponseDTO> findProjectsByUserIdAsQuick(@Param("userId") Long userId);
+
+    /**
+     * Busca os projetos de um usuário pelo email como QuickProjectResponseDTO
+     * @param email o email do usuário
+     * @return lista de QuickProjectResponseDTO
+     */
+    @Query("SELECT new com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO(p) " +
+           "FROM RegularUser u JOIN u.projects p WHERE u.credential.email = :email")
+    List<QuickProjectResponseDTO> findProjectsByUserEmailAsQuick(@Param("email") String email);
 }

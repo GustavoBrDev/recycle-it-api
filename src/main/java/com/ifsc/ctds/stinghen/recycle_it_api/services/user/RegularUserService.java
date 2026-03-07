@@ -7,6 +7,8 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
@@ -90,6 +92,7 @@ public class RegularUserService {
 
         user.getCredential().setPassword( passwordEncoder.encode(user.getCredential().getPassword()));
         credentialsRepository.save(user.getCredential());
+        user.setActualLeague( leagueService.getObjectByTier(1));
         user = repository.save(user);
         punctuationService.create(user);
 
@@ -785,6 +788,54 @@ public class RegularUserService {
     @Transactional(readOnly = true)
     public Page<RegularUser> getByActualLeagueId(Long leagueId, Pageable pageable) {
         return repository.findByActualLeague_Id(leagueId, pageable);
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo ID
+     * @param userId o ID do usuário
+     * @return lista de projetos em forma de {@link Project}
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getProjectsByUserId(Long userId) {
+        return this.getObjectById(userId).getProjects();
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo ID como QuickProjectResponseDTO
+     * @param userId o ID do usuário
+     * @return lista de projetos em forma de {@link QuickProjectResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<QuickProjectResponseDTO> getProjectsByUserIdAsQuick(Long userId) {
+        // Verifica se o usuário existe antes de buscar os projetos
+        if (!repository.existsById(userId)) {
+            throw new EntityNotFoundException("Usuário não encontrado com id: " + userId);
+        }
+        return repository.findProjectsByUserIdAsQuick(userId);
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo email
+     * @param email o email do usuário
+     * @return lista de projetos em forma de {@link Project}
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getProjectsByUserEmail(String email) {
+        return this.getObjectByEmail(email).getProjects();
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo email como QuickProjectResponseDTO
+     * @param email o email do usuário
+     * @return lista de projetos em forma de {@link QuickProjectResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<QuickProjectResponseDTO> getProjectsByUserEmailAsQuick(String email) {
+        // Verifica se o usuário existe antes de buscar os projetos
+        if (!this.existsByEmail(email)) {
+            throw new EntityNotFoundException("Usuário não encontrado com email: " + email);
+        }
+        return repository.findProjectsByUserEmailAsQuick(email);
     }
 
 

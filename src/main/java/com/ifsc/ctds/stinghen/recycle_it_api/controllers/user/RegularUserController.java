@@ -1,12 +1,13 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.user;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserPutRequestDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -554,6 +555,8 @@ public class RegularUserController {
             content = @Content(schema = @Schema(implementation = MeResponseDTO.class),
                     examples = @ExampleObject(value = """
                     {
+                        "id": 1,
+                        "gems": 50,
                         "email": "gustavo.s041@aluno.ifsc.edu.br",
                         "avatar": "terra"
                     }
@@ -815,6 +818,82 @@ public class RegularUserController {
         try {
             Page<FullUserResponseDTO> users = service.getAll(pageable).map(FullUserResponseDTO::new);
             return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para obter os projetos iniciados por um usuário pelo ID como QuickProjectResponseDTO
+     * @param userId O ID do usuário
+     * @return Um ResponseEntity contendo a lista de projetos e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getProjectsByUserIdAsQuick(Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "[PUBLIC] Obtém os projetos iniciados por um usuário pelo ID (resumido)", description = "Obtém os projetos iniciados por um usuário pelo ID como DTO resumido e retorna a lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "description": "Transforme garrafas plásticas em objetos úteis",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 10
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/started/id/{userId}")
+    public ResponseEntity<List<QuickProjectResponseDTO>> getProjectsByUserIdAsQuick(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getProjectsByUserIdAsQuick(userId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para obter os projetos iniciados por um usuário pelo email como QuickProjectResponseDTO
+     * @param email O email do usuário
+     * @return Um ResponseEntity contendo a lista de projetos e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getProjectsByUserEmailAsQuick(String)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "[PUBLIC] Obtém os projetos iniciados por um usuário pelo email (resumido)", description = "Obtém os projetos iniciados por um usuário pelo email como DTO resumido e retorna a lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "description": "Transforme garrafas plásticas em objetos úteis",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 10
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/started/email/{email}")
+    public ResponseEntity<List<QuickProjectResponseDTO>> getProjectsByUserEmailAsQuick(
+            @PathVariable @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+        try {
+            return new ResponseEntity<>(service.getProjectsByUserEmailAsQuick(email), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

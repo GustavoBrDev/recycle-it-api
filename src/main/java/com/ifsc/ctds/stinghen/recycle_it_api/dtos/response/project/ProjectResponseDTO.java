@@ -30,7 +30,7 @@ public class ProjectResponseDTO implements ResponseDTO {
 
     public ProjectResponseDTO(Project project) {
         this.id = project.getId();
-        this.text = project.getText();
+        this.text = project.getTitle();
         this.description = project.getDescription();
         this.instructions = project.getInstructions();
         

@@ -43,6 +43,7 @@ public class RegularUserRequestDTO implements ConvertibleRequestDTO<RegularUser>
                                 .password(password)
                                 .build()
                 )
+                .recycleGems(0L)
                 .currentAvatar(avatar)
                 .build();
     }

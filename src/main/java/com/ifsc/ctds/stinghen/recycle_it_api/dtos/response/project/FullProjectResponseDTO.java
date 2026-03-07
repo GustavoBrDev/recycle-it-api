@@ -22,7 +22,7 @@ public class FullProjectResponseDTO implements ResponseDTO {
 
     public String description;
 
-    private List<FullProjectMaterialResponseDTO> materials;
+    public List<FullProjectMaterialResponseDTO> materials;
 
     public String instructions;
 
@@ -30,7 +30,7 @@ public class FullProjectResponseDTO implements ResponseDTO {
 
     public FullProjectResponseDTO(Project project) {
         this.id = project.getId();
-        this.text = project.getText();
+        this.text = project.getTitle();
         this.description = project.getDescription();
         this.instructions = project.getInstructions();
         

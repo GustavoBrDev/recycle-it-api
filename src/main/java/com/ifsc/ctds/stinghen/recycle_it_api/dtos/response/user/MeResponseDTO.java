@@ -16,11 +16,17 @@ import lombok.NoArgsConstructor;
 @Builder
 public class MeResponseDTO implements ResponseDTO {
 
+    public Long id;
+
+    public Long gems;
+
     public String email;
 
-    private Avatar avatar;
+    public Avatar avatar;
 
     public MeResponseDTO(RegularUser user) {
+        this.id = user.getId();
+        this.gems = user.getRecycleGems();
         this.email = user.getCredential().getEmail();
         this.avatar = user.getCurrentAvatar();
     }

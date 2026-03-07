@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class ProjectRequestDTO implements ConvertibleRequestDTO<Project> {
 
     @NotBlank
-    public String text;
+    public String title;
 
     @NotBlank
     public String description;
@@ -29,7 +29,7 @@ public class ProjectRequestDTO implements ConvertibleRequestDTO<Project> {
     @Override
     public Project convert() {
         return Project.builder()
-                .text(text)
+                .title(title)
                 .description(description)
                 .materials(
                         materials.stream()

@@ -470,6 +470,7 @@ public class ProjectController {
         }
     }
 
+
     /**
      * Método GET para buscar um projeto como DTO pelo ID
      * @param id O ID do projeto a ser buscado
@@ -725,7 +726,7 @@ public class ProjectController {
                             "materials": [
                                 {
                                     "id": 2,
-                                    "material": "PAPER",
+                   f                 "material": "PAPER",
                                     "quantity": 5
                                 }
                             ],
