@@ -28,15 +28,23 @@ public class ProjectRequestDTO implements ConvertibleRequestDTO<Project> {
 
     @Override
     public Project convert() {
-        return Project.builder()
+
+        System.out.println(materials);
+
+        Project project = Project.builder()
                 .title(title)
                 .description(description)
-                .materials(
-                        materials.stream()
-                                .map(ProjectMaterialRequestDTO::convert)
-                                .collect(Collectors.toList())
-                )
                 .instructions(instructions)
                 .build();
+
+        List<ProjectMaterial> materialList = materials.stream()
+                .map(ProjectMaterialRequestDTO::convert)
+                .collect(Collectors.toList());
+
+        materialList.forEach(material -> material.setProject(project));
+
+        project.setMaterials(materialList);
+
+        return project;
     }
 }

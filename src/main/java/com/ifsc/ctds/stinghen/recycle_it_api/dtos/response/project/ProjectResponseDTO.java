@@ -22,7 +22,7 @@ public class ProjectResponseDTO implements ResponseDTO {
 
     public String description;
 
-    private List<ProjectMaterialResponseDTO> materials;
+    public List<ProjectMaterialResponseDTO> materials;
 
     public String instructions;
 

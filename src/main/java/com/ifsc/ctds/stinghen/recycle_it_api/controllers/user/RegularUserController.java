@@ -898,4 +898,32 @@ public class RegularUserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    /**
+     * Método GET para verificar se um projeto foi iniciado pelo usuário autenticado
+     * @param projectId O ID do projeto a ser verificado
+     * @param authentication Informações de autenticação do usuário
+     * @return Um ResponseEntity contendo true se o projeto foi iniciado, false caso contrário, e o status HTTP 200 (OK)
+     * @see RegularUserService#isProjectStartedByUserEmail(String, Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Verifica se projeto foi iniciado pelo usuário", description = "Verifica se o usuário autenticado já iniciou um projeto específico e retorna boolean com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso",
+            content = @Content(schema = @Schema(implementation = Boolean.class),
+            examples = @ExampleObject(value = "true")))
+    @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/check-started/{projectId}")
+    public ResponseEntity<Boolean> isProjectStarted(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            boolean isStarted = service.isProjectStartedByUserEmail(email, projectId);
+            return new ResponseEntity<>(isStarted, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

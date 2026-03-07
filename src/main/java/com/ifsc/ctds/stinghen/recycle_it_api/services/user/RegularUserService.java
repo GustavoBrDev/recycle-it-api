@@ -838,5 +838,27 @@ public class RegularUserService {
         return repository.findProjectsByUserEmailAsQuick(email);
     }
 
+    /**
+     * Verifica se um usuário está realizando um projeto específico
+     * @param userId o ID do usuário
+     * @param projectId o ID do projeto
+     * @return true se o usuário está realizando o projeto, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean isProjectStartedByUserId(Long userId, Long projectId) {
+        return repository.existsProjectByUserId(userId, projectId);
+    }
+
+    /**
+     * Verifica se um usuário está realizando um projeto específico pelo email
+     * @param email o email do usuário
+     * @param projectId o ID do projeto
+     * @return true se o usuário está realizando o projeto, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean isProjectStartedByUserEmail(String email, Long projectId) {
+        return repository.existsProjectByUserEmail(email, projectId);
+    }
+
 
 }
