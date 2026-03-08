@@ -261,6 +261,18 @@ public class KnowledgeArticleService {
     }
 
     /**
+     * Obtém todos os IDs dos artigos lidos por um usuário
+     * @param email o e-mail do usuário
+     * @return lista de IDs dos artigos lidos pelo usuário
+     */
+    @Transactional(readOnly = true)
+    public List<Long> getReadArticleIdsByUserEmail(String email) {
+        return userService.getObjectByEmail(email).getArticles().stream()
+                .map(Article::getId)
+                .toList();
+    }
+
+    /**
      * Obtém um artigo de conhecimento como ArticleResponseDTO pelo ID
      * @param id o ID do artigo
      * @return o artigo em forma de {@link ArticleResponseDTO}

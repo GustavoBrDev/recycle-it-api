@@ -259,10 +259,9 @@ public class KnowledgeArticleController {
     @SecurityRequirement(name = "Bearer")
     @PostMapping("/{id}/finish")
     public ResponseEntity<FeedbackResponseDTO> finishReading(
-            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestParam @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id, Authentication authentication) {
         try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.finish(id, email), HttpStatus.OK);
+            return new ResponseEntity<>((FeedbackResponseDTO) service.finish(id, authentication.getName()), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -596,6 +595,31 @@ public class KnowledgeArticleController {
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
         try {
             return new ResponseEntity<>(service.getReadArticleIdsByUserId(userId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para buscar os IDs dos artigos lidos por um usuário
+     * @return Um ResponseEntity contendo a lista de IDs e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see KnowledgeArticleService#getReadArticleIdsByUserId(Long)
+     */
+    @Tag(name = "Artigos de Conhecimento", description = "Recurso para gerenciamento de artigos de conhecimento")
+    @Operation(summary = "Busca IDs dos artigos lidos pelo usuário autenticado", description = "Busca os IDs dos artigos de conhecimento lidos por um usuário e retorna uma lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "IDs de artigos encontrados com sucesso",
+            content = @Content(schema = @Schema(implementation = Long.class),
+                    examples = @ExampleObject(value = """
+                    [1, 2, 3, 4, 5]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Nenhum artigo encontrado para o usuário")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/user/read-ids/email")
+    public ResponseEntity<List<Long>> getReadArticleIdsByUserEmail(
+           Authentication authentication) {
+        try {
+            return new ResponseEntity<>(service.getReadArticleIdsByUserEmail( authentication.getName() ), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
