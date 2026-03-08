@@ -1,6 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.article;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class KnowledgeArticle extends Article {
 
+    @Column(columnDefinition = "TEXT")
     private String text;
 
     private List<String> article_references;

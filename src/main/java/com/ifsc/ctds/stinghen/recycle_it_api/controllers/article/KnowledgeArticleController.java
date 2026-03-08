@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +50,6 @@ public class KnowledgeArticleController {
     /**
      * Método POST para criar um novo artigo de conhecimento
      * @param requestDTO A {@link KnowledgeArticleRequestDTO} contendo os dados do artigo
-     * @param email O email do autor do artigo
      * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
      * @see KnowledgeArticleService#create(KnowledgeArticleRequestDTO, String), KnowledgeArticleRequestDTO
      */
@@ -80,10 +80,9 @@ public class KnowledgeArticleController {
                         "text": "Conteúdo completo do artigo de conhecimento...",
                         "references": ["ifsc.edu.br", "salvatorianos.com.br", "ifpr.edu.br"]
                     }
-                    """) @Valid KnowledgeArticleRequestDTO requestDTO,
-            @RequestParam @Parameter(required = true, example = "autor@exemplo.com") String email) {
+                    """) @Valid KnowledgeArticleRequestDTO requestDTO, Authentication authentication) {
         try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO, email), HttpStatus.CREATED);
+            return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO, authentication.getName()), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -446,6 +445,7 @@ public class KnowledgeArticleController {
         try {
             return new ResponseEntity<>(service.getAllAsArticleResponse(pageable), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

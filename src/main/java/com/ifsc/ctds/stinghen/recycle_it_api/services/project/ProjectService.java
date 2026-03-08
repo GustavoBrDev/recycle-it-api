@@ -479,8 +479,8 @@ public class ProjectService {
      * @return página de DTOs de projetos filtrados
      */
     @Transactional(readOnly = true)
-    public Page<ProjectResponseDTO> getFiltered(String search) {
-        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(ProjectResponseDTO::new);
+    public Page<QuickProjectResponseDTO> getFiltered(String search) {
+        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
     }
 
     /**
@@ -490,9 +490,9 @@ public class ProjectService {
      * @return página de DTOs de projetos filtrados
      */
     @Transactional(readOnly = true)
-    public Page<ProjectResponseDTO> getFiltered(String search, Pageable pageable) {
+    public Page<QuickProjectResponseDTO> getFiltered(String search, Pageable pageable) {
         return repository.findAll(
-                ProjectSpecification.getFiltered(search), pageable).map(ProjectResponseDTO::new);
+                ProjectSpecification.getFiltered(search), pageable).map(QuickProjectResponseDTO::new);
     }
 
     /**
@@ -752,13 +752,13 @@ public class ProjectService {
      * @return página de DTOs de projetos recomendados
      */
     @Transactional(readOnly = true)
-    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(String email) {
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoal(String email) {
         try {
             var reduceItems = reduceItemService.getByUserEmail(email);
-            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged()).map(ProjectResponseDTO::new);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
         } catch (NotFoundException e) {
             // Se usuário não possui meta ativa, retorna todos os projetos
-            return repository.findAll(Pageable.unpaged()).map(ProjectResponseDTO::new);
+            return repository.findAll(Pageable.unpaged()).map(QuickProjectResponseDTO::new);
         }
     }
 
@@ -768,14 +768,13 @@ public class ProjectService {
      * @param pageable configurações de paginação
      * @return página de DTOs de projetos recomendados
      */
-    @Transactional(readOnly = true)
-    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(String email, Pageable pageable) {
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoal(String email, Pageable pageable) {
         try {
             var reduceItems = reduceItemService.getByUserEmail(email);
-            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable).map(ProjectResponseDTO::new);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable).map(QuickProjectResponseDTO::new);
         } catch (NotFoundException e) {
             // Se usuário não possui meta ativa, retorna todos os projetos com paginação
-            return repository.findAll(pageable).map(ProjectResponseDTO::new);
+        return repository.findAll(pageable).map(QuickProjectResponseDTO::new);
         }
     }
 

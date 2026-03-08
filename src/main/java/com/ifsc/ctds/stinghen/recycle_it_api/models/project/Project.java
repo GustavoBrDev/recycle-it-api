@@ -21,11 +21,13 @@ public class Project {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectMaterial> materials;
 
+    @Column(columnDefinition = "TEXT")
     private String instructions;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)

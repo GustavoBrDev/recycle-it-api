@@ -23,6 +23,7 @@ public abstract class Article implements IArticle {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Duration minimumTime;

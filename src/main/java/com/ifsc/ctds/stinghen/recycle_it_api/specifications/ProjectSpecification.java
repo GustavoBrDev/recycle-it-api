@@ -38,9 +38,9 @@ public class ProjectSpecification {
                     orPredicates.add(cb.equal(root.get("id"), id));
                 } catch (NumberFormatException ignored) {}
 
-                // Comparação com o campo "text"
+                // Comparação com o campo "title"
                 orPredicates.add(cb.like(
-                        cb.lower(root.get("text")), "%" + search.toLowerCase() + "%"
+                        cb.lower(root.get("title")), "%" + search.toLowerCase() + "%"
                 ));
 
                 // Comparação com o campo "description"
