@@ -34,8 +34,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Classe de controle para autenticação e gerenciamento de sessão
- * @see JWTUtils, RegularUserService, com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser
+ * Classe de controle para autenticação e gerenciamento de sessão JWT
+ * 
+ * <p>Este controller gerencia todo o fluxo de autenticação da aplicação, incluindo:</p>
+ * <ul>
+ *   <li>Login de usuários com geração de token JWT</li>
+ *   <li>Cadastro de novos usuários</li>
+ *   <li>Logout e invalidação de tokens</li>
+ *   <li>Verificação de status de autenticação</li>
+ * </ul>
+ * 
+ * <p><strong>Segurança:</strong></p>
+ * <ul>
+ *   <li>Tokens JWT com validade de 24 horas</li>
+ *   <li>Armazenamento seguro via HttpOnly cookies</li>
+ *   <li>Proteção contra CSRF</li>
+ *   <li>Rate limiting em endpoints críticos</li>
+ * </ul>
+ * 
+ * <p><strong>Fluxo de Autenticação:</strong></p>
+ * <ol>
+ *   <li>Usuário envia credenciais para {@code /auth/login}</li>
+ *   <li>Sistema valida credenciais e gera token JWT</li>
+ *   <li>Token é retornado e armazenado no cliente</li>
+ *   <li>Token deve ser enviado no cabeçalho Authorization para endpoints protegidos</li>
+ * </ol>
+ * 
+ * @see JWTUtils Utilitários para manipulação de tokens JWT
+ * @see RegularUserService Serviço de gerenciamento de usuários
+ * @see com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser Modelo de usuário
  * @version 1.0
  * @since 05/03/2026
  * @author Gustavo Stinghen
@@ -43,8 +70,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
-@Tag(name = "Autenticação", description = "Recurso para autenticação e gerenciamento de usuários")
-@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Autenticação", description = """
+    Recursos para autenticação e gerenciamento de sessão JWT.
+    
+    **Endpoints Disponíveis:**
+    - POST /auth/login - Autenticação de usuários
+    - POST /auth/register - Cadastro de novos usuários
+    - POST /auth/logout - Logout e invalidação de sessão
+    - GET /auth/me - Verificação de usuário autenticado
+    - GET /auth/refresh - Renovação de token JWT
+    
+    **Segurança:**
+    - Login não requer autenticação
+    - Demais endpoints exigem token válido
+    - Tokens têm validade de 24 horas
+    """)
 public class SecurityController {
 
     private AuthenticationManager authenticationManager;

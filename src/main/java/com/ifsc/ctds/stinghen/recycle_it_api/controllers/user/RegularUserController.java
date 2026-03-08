@@ -568,7 +568,7 @@ public class RegularUserController {
     public ResponseEntity<ResponseDTO> getMe(Authentication authentication ) {
         try {
             String email = authentication.getName();
-            return new ResponseEntity<>( service.getMe( email ), HttpStatus.OK);
+            return new ResponseEntity<>( service.getMe( email, authentication ), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

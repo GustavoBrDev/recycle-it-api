@@ -1,6 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.specifications;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial;
 import jakarta.persistence.criteria.Join;
@@ -146,6 +147,99 @@ public class ProjectSpecification {
                 }
 
                 // Se o usuário tem materiais, recomenda projetos que usam qualquer um deles
+                if (!materialPredicates.isEmpty()) {
+                    predicates.add(cb.or(materialPredicates.toArray(new Predicate[0])));
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /**
+     * Cria uma Specification para recomendar projetos com base nos itens de redução do usuário
+     * @param reduceItems lista de itens de redução do usuário
+     * @return Specification configurada para recomendações
+     */
+    public static Specification<Project> getRecommendedByReduceItems(List<ReduceItem> reduceItems) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (reduceItems != null && !reduceItems.isEmpty()) {
+                // Join com os materiais do projeto
+                Join<Project, RecycledMaterial> materialsJoin = root.join("materials");
+
+                // Cria predicados para cada tipo de material que o usuário possui na meta de redução
+                List<Predicate> materialPredicates = new ArrayList<>();
+                
+                for (ReduceItem reduceItem : reduceItems) {
+                    // Recomenda projetos que requerem quantidade menor ou igual à que o usuário possui na meta
+                    Predicate materialMatch = cb.and(
+                        cb.equal(materialsJoin.get("type"), reduceItem.getType()),
+                        cb.lessThanOrEqualTo(materialsJoin.get("quantity"), reduceItem.getTargetQuantity())
+                    );
+                    materialPredicates.add(materialMatch);
+                }
+
+                // Se o usuário tem itens de redução, recomenda projetos que usam qualquer um desses materiais
+                if (!materialPredicates.isEmpty()) {
+                    predicates.add(cb.or(materialPredicates.toArray(new Predicate[0])));
+                }
+            } else {
+                // Se usuário não tem itens de redução, recomenda projetos que não requerem materiais
+                Join<Project, RecycledMaterial> materialsJoin = root.join("materials");
+                predicates.add(cb.equal(materialsJoin.get("quantity"), 0));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /**
+     * Cria uma Specification combinada para busca inteligente e recomendação por itens de redução
+     * @param search termo de busca inteligente
+     * @param reduceItems lista de itens de redução do usuário
+     * @return Specification combinada
+     */
+    public static Specification<Project> getFilteredAndRecommendedByReduceItems(String search, List<ReduceItem> reduceItems) {
+        Specification<Project> filteredSpec = getFiltered(search);
+        Specification<Project> recommendedSpec = getRecommendedByReduceItems(reduceItems);
+        
+        return filteredSpec.and(recommendedSpec);
+    }
+
+    /**
+     * Cria uma Specification para recomendar projetos com base nos itens de redução do usuário com tolerância
+     * @param reduceItems lista de itens de redução do usuário
+     * @param tolerancePercent percentual de tolerância para recomendação (ex: 20 para aceitar até 20% a mais)
+     * @return Specification configurada
+     */
+    public static Specification<Project> getRecommendedByReduceItemsWithTolerance(List<ReduceItem> reduceItems, int tolerancePercent) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (reduceItems != null && !reduceItems.isEmpty()) {
+                // Join com os materiais do projeto
+                Join<Project, RecycledMaterial> materialsJoin = root.join("materials");
+
+                // Calcula fator de tolerância (ex: 20% = 1.2)
+                double toleranceFactor = 1.0 + (tolerancePercent / 100.0);
+
+                // Cria predicados para cada tipo de material que o usuário possui na meta de redução
+                List<Predicate> materialPredicates = new ArrayList<>();
+                
+                for (ReduceItem reduceItem : reduceItems) {
+                    // Calcula quantidade máxima aceitável com tolerância
+                    long maxAcceptableQuantity = (long) (reduceItem.getTargetQuantity() * toleranceFactor);
+                    
+                    Predicate materialMatch = cb.and(
+                        cb.equal(materialsJoin.get("type"), reduceItem.getType()),
+                        cb.lessThanOrEqualTo(materialsJoin.get("quantity"), maxAcceptableQuantity)
+                    );
+                    materialPredicates.add(materialMatch);
+                }
+
+                // Se o usuário tem itens de redução, recomenda projetos que usam qualquer um desses materiais
                 if (!materialPredicates.isEmpty()) {
                     predicates.add(cb.or(materialPredicates.toArray(new Predicate[0])));
                 }

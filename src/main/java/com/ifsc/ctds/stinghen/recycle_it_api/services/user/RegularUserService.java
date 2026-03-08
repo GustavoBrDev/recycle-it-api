@@ -31,6 +31,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -642,6 +644,21 @@ public class RegularUserService {
     @Transactional (readOnly = true)
     public ResponseDTO getMe ( String email ){
         return new MeResponseDTO(getObjectByEmail(email));
+    }
+
+    /**
+     * Obtém informações do usuário atual com verificação de role DEV
+     * @param email o e-mail do usuário
+     * @param authentication o objeto de autenticação do Spring Security
+     * @return o usuário em forma da DTO {@link MeResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional (readOnly = true)
+    public ResponseDTO getMe ( String email, Authentication authentication ){
+        RegularUser user = getObjectByEmail(email);
+        boolean isDev = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_DEV"));
+        return new MeResponseDTO(user, isDev);
     }
 
     /**

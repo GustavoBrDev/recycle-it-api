@@ -24,11 +24,22 @@ public class MeResponseDTO implements ResponseDTO {
 
     public Avatar avatar;
 
+    public boolean isDev;
+
     public MeResponseDTO(RegularUser user) {
         this.id = user.getId();
         this.gems = user.getRecycleGems();
         this.email = user.getCredential().getEmail();
         this.avatar = user.getCurrentAvatar();
+        this.isDev = false; // Default value, will be set by service
+    }
+
+    public MeResponseDTO(RegularUser user, boolean isDev) {
+        this.id = user.getId();
+        this.gems = user.getRecycleGems();
+        this.email = user.getCredential().getEmail();
+        this.avatar = user.getCurrentAvatar();
+        this.isDev = isDev;
     }
 
 }

@@ -12,17 +12,19 @@ import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.UserNotInActiveLeagueException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.GoalService;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceGoalService;
+import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceItemService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueSessionService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.punctuation.PointsPunctuationService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.RecycleGoalService;
-import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceGoalService;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.RecycleGoal;
 import com.ifsc.ctds.stinghen.recycle_it_api.specifications.ProjectSpecification;
 import jakarta.persistence.EntityNotFoundException;
@@ -62,6 +64,9 @@ public class ProjectService {
 
     @Autowired
     private ReduceGoalService reduceGoalService;
+
+    @Autowired
+    private ReduceItemService reduceItemService;
 
     @Autowired
     private GoalService goalService;
@@ -705,6 +710,284 @@ public class ProjectService {
             }
         } catch (Exception e) {
             System.err.println("Erro ao atualizar meta de reciclagem: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais da meta ativa de redução do usuário por ID
+     * @param userId ID do usuário
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(Long userId) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged()).map(ProjectResponseDTO::new);
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos
+            return repository.findAll(Pageable.unpaged()).map(ProjectResponseDTO::new);
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais da meta ativa de redução do usuário por ID (paginado)
+     * @param userId ID do usuário
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(Long userId, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable).map(ProjectResponseDTO::new);
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos com paginação
+            return repository.findAll(pageable).map(ProjectResponseDTO::new);
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais da meta ativa de redução do usuário por email
+     * @param email Email do usuário
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(String email) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged()).map(ProjectResponseDTO::new);
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos
+            return repository.findAll(Pageable.unpaged()).map(ProjectResponseDTO::new);
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados com base nos materiais da meta ativa de redução do usuário por email (paginado)
+     * @param email Email do usuário
+     * @param pageable configurações de paginação
+     * @return página de DTOs de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDTO> getRecommendedByUserReduceGoal(String email, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            return repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable).map(ProjectResponseDTO::new);
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos com paginação
+            return repository.findAll(pageable).map(ProjectResponseDTO::new);
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickDTO com base nos materiais da meta ativa de redução do usuário por ID
+     * @param userId ID do usuário
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoalAsQuick(Long userId) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickDTO
+            Page<Project> projectsPage = repository.findAll(Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickDTO com base nos materiais da meta ativa de redução do usuário por ID (paginado)
+     * @param userId ID do usuário
+     * @param pageable configurações de paginação
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoalAsQuick(Long userId, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickDTO com paginação
+            Page<Project> projectsPage = repository.findAll(pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickDTO com base nos materiais da meta ativa de redução do usuário por email
+     * @param email Email do usuário
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoalAsQuick(String email) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickDTO
+            Page<Project> projectsPage = repository.findAll(Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickDTO com base nos materiais da meta ativa de redução do usuário por email (paginado)
+     * @param email Email do usuário
+     * @param pageable configurações de paginação
+     * @return página de DTOs quick de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedByUserReduceGoalAsQuick(String email, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickDTO com paginação
+            Page<Project> projectsPage = repository.findAll(pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO com base nos materiais da meta ativa de redução do usuário por ID
+     * @param userId ID do usuário
+     * @return página de QuickProjectResponseDTO de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedProjectsQuickByUserReduceGoal(Long userId) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickProjectResponseDTO
+            Page<Project> projectsPage = repository.findAll(Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO com base nos materiais da meta ativa de redução do usuário por ID (paginado)
+     * @param userId ID do usuário
+     * @param pageable configurações de paginação
+     * @return página de QuickProjectResponseDTO de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedProjectsQuickByUserReduceGoal(Long userId, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserId(userId);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickProjectResponseDTO com paginação
+            Page<Project> projectsPage = repository.findAll(pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO com base nos materiais da meta ativa de redução do usuário por email
+     * @param email Email do usuário
+     * @return página de QuickProjectResponseDTO de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedProjectsQuickByUserReduceGoal(String email) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickProjectResponseDTO
+            Page<Project> projectsPage = repository.findAll(Pageable.unpaged());
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        }
+    }
+
+    /**
+     * Obtém projetos recomendados como QuickProjectResponseDTO com base nos materiais da meta ativa de redução do usuário por email (paginado)
+     * @param email Email do usuário
+     * @param pageable configurações de paginação
+     * @return página de QuickProjectResponseDTO de projetos recomendados
+     */
+    @Transactional(readOnly = true)
+    public Page<QuickProjectResponseDTO> getRecommendedProjectsQuickByUserReduceGoal(String email, Pageable pageable) {
+        try {
+            var reduceItems = reduceItemService.getByUserEmail(email);
+            Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByReduceItems(reduceItems), pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
+        } catch (NotFoundException e) {
+            // Se usuário não possui meta ativa, retorna todos os projetos como QuickProjectResponseDTO com paginação
+            Page<Project> projectsPage = repository.findAll(pageable);
+            
+            return projectsPage.map(project -> {
+                List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                return new QuickProjectResponseDTO(project, materials);
+            });
         }
     }
 }
