@@ -1,13 +1,20 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.services.project;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.OtherMaterialRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.OtherMaterialPutRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.OtherMaterials;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.OtherMaterial;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.OtherMaterialRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.repository.project.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,11 +28,36 @@ import java.util.List;
  * @see OtherMaterial
  * @since 22/02/2026
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class OtherMaterialService {
 
+    @Autowired
     public OtherMaterialRepository repository;
+
+    @Autowired
+    @Lazy
+    public ProjectService projectService;
+
+    /**
+     * Cria um novo outro material
+     * @param dto o outro material a ser criado
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o projeto não for encontrado
+     */
+    @Transactional
+    public ResponseDTO create(OtherMaterialRequestDTO dto) {
+        OtherMaterial otherMaterial = dto.convert();
+        Project project = projectService.getObjectById(dto.projectId);
+        otherMaterial.setProject(project);
+        repository.save(otherMaterial);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Outro material criado com sucesso")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
 
     /**
      * Atualiza o tipo de material de um outro material
@@ -167,4 +199,30 @@ public class OtherMaterialService {
 
         throw new EntityNotFoundException("Outro material não encontrado com o ID " + id);
     }
+
+    /**
+     * Atualiza um outro material existente
+     * @param id o id do outro material a ser atualizado
+     * @param dto o DTO com os dados atualizados
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o outro material não for encontrado
+     */
+    @Transactional
+    public ResponseDTO update(Long id, OtherMaterialPutRequestDTO dto) {
+        OtherMaterial existingMaterial = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Outro material não encontrado com id: " + id));
+        
+        existingMaterial.setType(dto.type);
+        existingMaterial.setQuantity(dto.quantity);
+        existingMaterial.setDescription(dto.description);
+        repository.save(existingMaterial);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Outro material atualizado com sucesso")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+
 }

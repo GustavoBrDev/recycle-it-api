@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.project;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectPutRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
@@ -99,9 +100,9 @@ public class ProjectController {
     /**
      * Método PUT para atualizar um projeto existente
      * @param id O ID do projeto a ser atualizado
-     * @param requestDTO A {@link ProjectRequestDTO} contendo os dados atualizados
+     * @param requestDTO A {@link ProjectPutRequestDTO} contendo os dados atualizados
      * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see ProjectService#update(Long, ProjectRequestDTO), ProjectRequestDTO
+     * @see ProjectService#update(Long, ProjectPutRequestDTO) 
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
     @Operation(summary = "Atualiza um projeto", description = "Atualiza um projeto existente e retorna feedback da operação com o status HTTP 200")
@@ -120,25 +121,19 @@ public class ProjectController {
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
     @PutMapping("/{id}")
-    public ResponseEntity<FeedbackResponseDTO> updateProject(
+    public ResponseEntity<ResponseDTO> updateProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true,
             content = @Content(schema = @Schema(implementation = ProjectRequestDTO.class)),
             example = """
                     {
                         "text": "Projeto atualizado de reciclagem",
-                        "description": "Descrição atualizada do projeto",
-                        "materials": [
-                            {
-                                "material": "PLASTIC",
-                                "quantity": 15
-                            }
-                        ],
+                        "description": "Descrição atualizada do projeto"
                         "instructions": "Instruções atualizadas"
                     }
-                    """) @Valid ProjectRequestDTO requestDTO) {
+                    """) @Valid ProjectPutRequestDTO requestDTO) {
         try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.update(id, requestDTO), HttpStatus.OK);
+            return new ResponseEntity<>( service.update(id, requestDTO), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -167,7 +162,7 @@ public class ProjectController {
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{id}/text")
+    @PatchMapping("/{id}/title")
     public ResponseEntity<FeedbackResponseDTO> updateProjectText(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true, example = "Novo texto do projeto") String text) {
@@ -784,6 +779,7 @@ public class ProjectController {
         try {
             return new ResponseEntity<>(service.getAllQuick(pageable), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }

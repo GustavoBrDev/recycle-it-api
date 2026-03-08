@@ -75,12 +75,8 @@ public class UserCommentController {
             @RequestParam @Parameter(required = true, example = "Ótimo projeto de reciclagem!") String comment,
             @RequestParam @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
             Authentication authentication) {
-        try {
-            String userEmail = authentication.getName();
-            return new ResponseEntity<>((FeedbackResponseDTO) service.create(comment, userEmail, projectId), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        String userEmail = authentication.getName();
+        return new ResponseEntity<>((FeedbackResponseDTO) service.create(comment, userEmail, projectId), HttpStatus.CREATED);
     }
 
     /**

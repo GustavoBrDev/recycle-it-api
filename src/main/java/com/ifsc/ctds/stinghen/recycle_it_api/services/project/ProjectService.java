@@ -1,6 +1,7 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.services.project;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectMaterialRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectPutRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
@@ -10,6 +11,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectR
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.UserNotInActiveLeagueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.punctuation.PointsPunctuation;
@@ -67,6 +69,9 @@ public class ProjectService {
     @Autowired
     private LeagueSessionService leagueService;
 
+    @Autowired
+    private ProjectMaterialService projectMaterialService;
+
     /**
      * Cria/persiste o registro de um projeto no banco de dados
      * @param requestDTO DTO de request de projetos
@@ -92,7 +97,7 @@ public class ProjectService {
      * @throws EntityNotFoundException quando o projeto não for encontrado
      */
     @Transactional
-    public ResponseDTO update(Long id, ProjectRequestDTO requestDTO) {
+    public ResponseDTO update(Long id, ProjectPutRequestDTO requestDTO) {
         Project existingProject = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Projeto não encontrado com id: " + id
@@ -100,11 +105,6 @@ public class ProjectService {
 
         existingProject.setTitle(requestDTO.title);
         existingProject.setDescription(requestDTO.description);
-        existingProject.setMaterials(
-                requestDTO.materials.stream()
-                        .map(ProjectMaterialRequestDTO::convert)
-                        .collect(java.util.stream.Collectors.toList())
-        );
         existingProject.setInstructions(requestDTO.instructions);
 
         repository.save(existingProject);
@@ -256,7 +256,6 @@ public class ProjectService {
      * @throws EntityNotFoundException quando o projeto não for encontrado
      * @throws InvalidRelationshipException caso a relação entre o usuário e o projeto seja inválida (não estava realizando o projeto)
      */
-    @Transactional
     public ResponseDTO finalize ( RegularUser user, Long projectId ){
 
         Long userId = user.getId();
@@ -303,8 +302,8 @@ public class ProjectService {
         try {
             PointsPunctuation leaguePunctuation = leagueService.getActivePointsPunctuationByUserId(userId);
             punctuationService.incrementRecyclePoints(leaguePunctuation.getId(), totalPoints);
-        } catch (Exception ignored) {
-            // Usuário não está em liga ativa - ignora silenciosamente
+        } catch (NotFoundException ignored) {
+
         }
     }
 
@@ -373,7 +372,9 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public ResponseDTO getQuickById(Long id) {
         if (repository.existsById(id)) {
-            return new QuickProjectResponseDTO(repository.findById(id).get());
+            Project project = repository.findById(id).get();
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
         }
 
         throw new NotFoundException("Projeto não encontrado com o ID " + id);
@@ -394,7 +395,14 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public List<QuickProjectResponseDTO> getAllQuick() {
-        return repository.findAll().stream().map(QuickProjectResponseDTO::new).toList();
+        List<Project> projects = repository.findAll();
+        
+        return projects.stream()
+                .map(project -> {
+                    List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+                    return new QuickProjectResponseDTO(project, materials);
+                })
+                .toList();
     }
 
     /**
@@ -432,7 +440,12 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public Page<QuickProjectResponseDTO> getAllQuick(Pageable pageable) {
-        return repository.findAll(pageable).map(QuickProjectResponseDTO::new);
+        Page<Project> projectsPage = repository.findAll(pageable);
+        
+        return projectsPage.map(project -> {
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
+        });
     }
 
     /**
@@ -484,7 +497,12 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public Page<QuickProjectResponseDTO> getFilteredAsQuick(String search) {
-        return repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
+        Page<Project> projectsPage = repository.findAll(ProjectSpecification.getFiltered(search), Pageable.unpaged());
+        
+        return projectsPage.map(project -> {
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
+        });
     }
 
     /**
@@ -495,8 +513,12 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public Page<QuickProjectResponseDTO> getFilteredAsQuick(String search, Pageable pageable) {
-        return repository.findAll(
-                ProjectSpecification.getFiltered(search), pageable).map(QuickProjectResponseDTO::new);
+        Page<Project> projectsPage = repository.findAll(ProjectSpecification.getFiltered(search), pageable);
+        
+        return projectsPage.map(project -> {
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
+        });
     }
 
     /**
@@ -595,7 +617,12 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public Page<QuickProjectResponseDTO> getRecommendedByMaterialsAsQuick(Map<Materials, Long> userMaterials) {
-        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), Pageable.unpaged()).map(QuickProjectResponseDTO::new);
+        Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), Pageable.unpaged());
+        
+        return projectsPage.map(project -> {
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
+        });
     }
 
     /**
@@ -606,7 +633,12 @@ public class ProjectService {
      */
     @Transactional(readOnly = true)
     public Page<QuickProjectResponseDTO> getRecommendedByMaterialsAsQuick(Map<Materials, Long> userMaterials, Pageable pageable) {
-        return repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), pageable).map(QuickProjectResponseDTO::new);
+        Page<Project> projectsPage = repository.findAll(ProjectSpecification.getRecommendedByMaterials(userMaterials), pageable);
+        
+        return projectsPage.map(project -> {
+            List<ProjectMaterial> materials = projectMaterialService.getByProjectId(project.getId());
+            return new QuickProjectResponseDTO(project, materials);
+        });
     }
 
     /**
