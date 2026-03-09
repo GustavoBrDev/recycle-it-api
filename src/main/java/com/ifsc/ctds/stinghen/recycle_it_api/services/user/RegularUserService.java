@@ -11,6 +11,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectRespon
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.DeniedRequestException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
@@ -153,6 +154,28 @@ public class RegularUserService {
     }
 
     /**
+     * Atualiza o avatar do usuário autenticado
+     * @param email o email do usuário autenticado
+     * @param avatar o novo avatar
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editAvatarByEmail (String email, Avatar avatar ){
+
+        RegularUser user = getObjectByEmail(email);
+        user.setCurrentAvatar(avatar);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Avatar atualizado com sucesso")
+                .content("Seu avatar foi atualizado")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
      * Atualiza o nome de um usuário
      * @param id o id do usuário
      * @param name o novo nome
@@ -205,6 +228,42 @@ public class RegularUserService {
 
         throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
 
+    }
+
+    /**
+     * Atualiza a senha do usuário autenticado validando a senha atual
+     * @param email o email do usuário autenticado
+     * @param senhaAtual a senha atual para validação
+     * @param novaSenha a nova senha a ser definida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     * @throws BadValueException quando a senha atual estiver incorreta
+     */
+    @Transactional
+    public ResponseDTO updatePasswordAuthenticated(String email, String senhaAtual, String novaSenha) {
+        RegularUser user = getObjectByEmail(email);
+        
+        // Verifica se a senha atual está correta
+        if (!passwordEncoder.matches(senhaAtual, user.getCredential().getPassword())) {
+            throw new DeniedRequestException("Senha atual incorreta");
+        }
+        
+        // Verifica se a nova senha é diferente da senha atual
+        if (passwordEncoder.matches(novaSenha, user.getCredential().getPassword())) {
+            throw new BadValueException("A nova senha deve ser diferente da senha atual");
+        }
+
+        
+        // Atualiza para a nova senha
+        user.getCredential().setPassword(passwordEncoder.encode(novaSenha));
+        repository.save(user);
+        
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Senha atualizada com sucesso")
+                .content("Sua senha foi alterada")
+                .isAlert(false)
+                .isError(false)
+                .build();
     }
 
     /**
@@ -428,6 +487,33 @@ public class RegularUserService {
         return FeedbackResponseDTO.builder()
                 .mainMessage("Usuário Removido")
                 .content("O usuário foi removido da lista de amizades")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
+     * Remove um amigo da lista de amigos do usuário autenticado
+     * @param email o email do usuário autenticado
+     * @param friendId o ID do usuário a ser removido
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso um dos usuários não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO removeFriendByEmail ( String email, Long friendId ){
+
+        RegularUser user = getObjectByEmail(email);
+
+        RegularUser friend = repository.findById(friendId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + friendId));
+
+        user.removeFriend(friend);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Amigo removido")
+                .content("O amigo foi removido da sua lista de amizades")
                 .isAlert(false)
                 .isError(false)
                 .build();
@@ -875,6 +961,24 @@ public class RegularUserService {
     @Transactional(readOnly = true)
     public boolean isProjectStartedByUserEmail(String email, Long projectId) {
         return repository.existsProjectByUserEmail(email, projectId);
+    }
+
+    /**
+     * Verifica se um usuário (email) é amigo de outro usuário (id)
+     * @param email o email do primeiro usuário
+     * @param friendId o ID do segundo usuário (amigo)
+     * @return true se são amigos, false caso contrário
+     * @throws EntityNotFoundException quando um dos usuários não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean isFriendByEmailAndId(String email, Long friendId) {
+        if (!this.existsByEmail(email)) {
+            throw new EntityNotFoundException("Usuário não encontrado com email: " + email);
+        }
+        if (!this.existsById(friendId)) {
+            throw new EntityNotFoundException("Usuário não encontrado com ID: " + friendId);
+        }
+        return repository.isFriendByEmailAndId(email, friendId);
     }
 
 

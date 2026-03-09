@@ -2,6 +2,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.security.controller;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.dtos.LoginRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.utils.JWTUtils;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
@@ -46,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 
  * <p><strong>Segurança:</strong></p>
  * <ul>
- *   <li>Tokens JWT com validade de 24 horas</li>
+ *   <li>Tokens JWT com validade de 8 horas</li>
  *   <li>Armazenamento seguro via HttpOnly cookies</li>
  *   <li>Proteção contra CSRF</li>
  *   <li>Rate limiting em endpoints críticos</li>
@@ -62,7 +63,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 
  * @see JWTUtils Utilitários para manipulação de tokens JWT
  * @see RegularUserService Serviço de gerenciamento de usuários
- * @see com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser Modelo de usuário
+ * @see RegularUser Modelo de usuário
  * @version 1.0
  * @since 05/03/2026
  * @author Gustavo Stinghen

@@ -20,7 +20,7 @@ public class SimpleUserResponseDTO implements ResponseDTO {
 
     public String name;
 
-    private Avatar avatar;
+    public Avatar avatar;
 
     public SimpleUserResponseDTO(RegularUser user) {
         this.id = user.getId();

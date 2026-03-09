@@ -3,9 +3,11 @@ package com.ifsc.ctds.stinghen.recycle_it_api.specifications;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -163,35 +165,48 @@ public class ProjectSpecification {
      */
     public static Specification<Project> getRecommendedByReduceItems(List<ReduceItem> reduceItems) {
         return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
 
-            if (reduceItems != null && !reduceItems.isEmpty()) {
-                // Join com os materiais do projeto
-                Join<Project, RecycledMaterial> materialsJoin = root.join("materials");
-
-                // Cria predicados para cada tipo de material que o usuário possui na meta de redução
-                List<Predicate> materialPredicates = new ArrayList<>();
-                
-                for (ReduceItem reduceItem : reduceItems) {
-                    // Recomenda projetos que requerem quantidade menor ou igual à que o usuário possui na meta
-                    Predicate materialMatch = cb.and(
-                        cb.equal(materialsJoin.get("type"), reduceItem.getType()),
-                        cb.lessThanOrEqualTo(materialsJoin.get("quantity"), reduceItem.getTargetQuantity())
-                    );
-                    materialPredicates.add(materialMatch);
-                }
-
-                // Se o usuário tem itens de redução, recomenda projetos que usam qualquer um desses materiais
-                if (!materialPredicates.isEmpty()) {
-                    predicates.add(cb.or(materialPredicates.toArray(new Predicate[0])));
-                }
-            } else {
-                // Se usuário não tem itens de redução, recomenda projetos que não requerem materiais
-                Join<Project, RecycledMaterial> materialsJoin = root.join("materials");
-                predicates.add(cb.equal(materialsJoin.get("quantity"), 0));
+            // se não houver itens de redução, não aplica filtro
+            if (reduceItems == null || reduceItems.isEmpty()) {
+                return cb.conjunction();
             }
 
-            return cb.and(predicates.toArray(new Predicate[0]));
+            List<Predicate> materialPredicates = new ArrayList<>();
+
+            // Cria uma subquery para RecycledMaterial
+            Subquery<RecycledMaterial> subquery = query.subquery(RecycledMaterial.class);
+            Root<RecycledMaterial> recycledRoot = subquery.from(RecycledMaterial.class);
+
+            // Join com Project na subquery
+            Join<RecycledMaterial, Project> projectJoin = recycledRoot.join("project");
+
+            // Condição da subquery: o projeto deve ser o mesmo da query principal
+            subquery.select(recycledRoot)
+                    .where(cb.equal(projectJoin.get("id"), root.get("id")));
+
+            for (ReduceItem reduceItem : reduceItems) {
+                // Cria predicado para verificar se existe um RecycledMaterial compatível
+                Predicate existsPredicate = cb.and(
+                        cb.equal(recycledRoot.get("type"), reduceItem.getType()),
+                        cb.lessThanOrEqualTo(recycledRoot.get("quantity"), reduceItem.getTargetQuantity())
+                );
+
+                // Cria uma subquery EXISTS para cada reduceItem
+                Subquery<RecycledMaterial> existsSubquery = query.subquery(RecycledMaterial.class);
+                Root<RecycledMaterial> existsRoot = existsSubquery.from(RecycledMaterial.class);
+                Join<RecycledMaterial, Project> existsProjectJoin = existsRoot.join("project");
+
+                existsSubquery.select(existsRoot)
+                        .where(cb.and(
+                                cb.equal(existsProjectJoin.get("id"), root.get("id")),
+                                cb.equal(existsRoot.get("type"), reduceItem.getType()),
+                                cb.lessThanOrEqualTo(existsRoot.get("quantity"), reduceItem.getTargetQuantity())
+                        ));
+
+                materialPredicates.add(cb.exists(existsSubquery));
+            }
+
+            return cb.or(materialPredicates.toArray(new Predicate[0]));
         };
     }
 

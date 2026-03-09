@@ -12,7 +12,7 @@ import jakarta.validation.constraints.PositiveOrZero;
  */
 public class ReduceItemRequestDTO implements ConvertibleRequestDTO<ReduceItem> {
 
-    @NotBlank
+    @NotNull
     public Materials type;
 
     @NotNull

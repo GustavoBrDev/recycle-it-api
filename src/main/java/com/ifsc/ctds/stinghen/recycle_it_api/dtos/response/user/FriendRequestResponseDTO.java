@@ -12,11 +12,18 @@ import lombok.NoArgsConstructor;
 @Builder
 public class FriendRequestResponseDTO implements ResponseDTO {
 
-    private Long id;
-    private SimpleUserResponseDTO sender;
+    public Long id;
+    public SimpleUserResponseDTO user;
 
+    // Construtor que recebe a FriendRequest e o usuário desejado para retornar
+    public FriendRequestResponseDTO(FriendRequest friendRequest, RegularUser userToReturn) {
+        this.id = friendRequest.getId();
+        this.user = new SimpleUserResponseDTO(userToReturn);
+    }
+
+    // Construtor original para compatibilidade (retorna o sender)
     public FriendRequestResponseDTO(FriendRequest friendRequest) {
         this.id = friendRequest.getId();
-        this.sender = new SimpleUserResponseDTO( (RegularUser) friendRequest.getSender());
+        this.user = new SimpleUserResponseDTO((RegularUser) friendRequest.getSender());
     }
 }

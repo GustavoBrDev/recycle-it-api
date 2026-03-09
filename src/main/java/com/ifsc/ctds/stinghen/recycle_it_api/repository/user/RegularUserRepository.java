@@ -58,4 +58,14 @@ public interface RegularUserRepository extends JpaRepository<RegularUser, Long>,
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
            "FROM RegularUser u JOIN u.projects p WHERE u.credential.email = :email AND p.id = :projectId")
     boolean existsProjectByUserEmail(@Param("email") String email, @Param("projectId") Long projectId);
+
+    /**
+     * Verifica se um usuário (email) é amigo de outro usuário (id)
+     * @param email o email do primeiro usuário
+     * @param friendId o ID do segundo usuário (amigo)
+     * @return true se são amigos, false caso contrário
+     */
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END " +
+           "FROM RegularUser u JOIN u.friends f WHERE u.credential.email = :email AND f.id = :friendId")
+    boolean isFriendByEmailAndId(@Param("email") String email, @Param("friendId") Long friendId);
 }
