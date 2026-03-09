@@ -798,6 +798,88 @@ public class ReduceGoalController {
     }
 
     /**
+     * Método GET para listar metas de redução ativas de um usuário pelo email (via auth)
+     * @return Um ResponseEntity contendo a lista de metas e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceGoalService#getActiveByUserEmail(String), List<ReduceGoal>
+     */
+    @Tag(name = "Metas de Redução", description = "Recurso para gerenciamento de metas de redução")
+    @Operation(summary = "Lista metas de redução ativas de usuário por email", description = "Lista metas de redução ativas de um usuário pelo email e retorna uma lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Metas de redução listadas com sucesso",
+            content = @Content(schema = @Schema(implementation = ReduceGoal.class),
+                    examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "progress": 60.0,
+                            "difficult": "NORMAL",
+                            "frequency": "WEEKLY",
+                            "nextCheck": "2026-03-01",
+                            "status": "ACTUAL",
+                            "skipDaysLeft": 5,
+                            "items": [
+                                {
+                                    "targetQuantity": 10,
+                                    "currentQuantity": 6,
+                                    "material": "PLASTIC"
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Nenhuma meta de redução encontrada para o usuário")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/auth/active")
+    public ResponseEntity<List<ReduceGoal>> getActiveReduceGoalsByUserEmailAuth( Authentication authentication) {
+        try {
+            return new ResponseEntity<>(service.getActiveByUserEmail(authentication.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para listar metas de redução ativas de um usuário autenticado como DTOs
+     * @param authentication Objeto de autenticação contendo o email do usuário
+     * @return Um ResponseEntity contendo a lista de metas DTO e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceGoalService#getActiveByUserEmailAsDto(String), List<ReduceGoalResponseDTO>
+     */
+    @Tag(name = "Metas de Redução", description = "Recurso para gerenciamento de metas de redução")
+    @Operation(summary = "Lista metas de redução ativas de usuário autenticado como DTOs", description = "Lista metas de redução ativas de um usuário autenticado e retorna uma lista de DTOs com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Metas de redução listadas com sucesso",
+            content = @Content(schema = @Schema(implementation = ReduceGoalResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "progress": 60.0,
+                            "difficult": "NORMAL",
+                            "frequency": "WEEKLY",
+                            "nextCheck": "2026-03-01",
+                            "skipDaysLeft": 5,
+                            "items": [
+                                {
+                                    "targetQuantity": 10,
+                                    "currentQuantity": 6,
+                                    "material": "PLASTIC"
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Nenhuma meta de redução encontrada para o usuário")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/auth/active/dto")
+    public ResponseEntity<List<ReduceGoalResponseDTO>> getActiveReduceGoalsByUserEmailAuthDto(Authentication authentication) {
+        try {
+            return new ResponseEntity<>(service.getActiveByUserEmailAsDto(authentication.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
      * Método GET para listar metas de redução ativas de um usuário pelo email com paginação
      * @param email O email do usuário
      * @param pageable Configurações de paginação
