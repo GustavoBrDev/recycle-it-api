@@ -629,6 +629,72 @@ public class RecycleGoalController {
     }
 
     /**
+     * Método GET para listar metas de reciclagem ativas de um usuário pelo email (pelo auth)
+     * @return Um ResponseEntity contendo a lista de metas e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RecycleGoalService#getActiveByUserEmail(String), List<RecycleGoal>
+     */
+    @Tag(name = "Metas de Reciclagem", description = "Recurso para gerenciamento de metas de reciclagem")
+    @Operation(summary = "Lista metas de reciclagem ativas de usuário por email", description = "Lista metas de reciclagem ativas de um usuário pelo email e retorna uma lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Metas de reciclagem listadas com sucesso",
+            content = @Content(schema = @Schema(implementation = RecycleGoal.class),
+                    examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "progress": 75.5,
+                            "difficult": "NORMAL",
+                            "frequency": "WEEKLY",
+                            "nextCheck": "2026-03-01",
+                            "status": "ACTUAL"
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Nenhuma meta de reciclagem encontrada para o usuário")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/auth/active")
+    public ResponseEntity<List<RecycleGoal>> getActiveRecycleGoalsByUserEmailAuth(Authentication authentication) {
+        try {
+            return new ResponseEntity<>(service.getActiveByUserEmail(authentication.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para listar metas de reciclagem ativas de um usuário autenticado como DTOs
+     * @param authentication Objeto de autenticação contendo o email do usuário
+     * @return Um ResponseEntity contendo a lista de metas DTO e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RecycleGoalService#getActiveByUserEmailAsDto(String), List<RecycleGoalResponseDTO>
+     */
+    @Tag(name = "Metas de Reciclagem", description = "Recurso para gerenciamento de metas de reciclagem")
+    @Operation(summary = "Lista metas de reciclagem ativas de usuário autenticado como DTOs", description = "Lista metas de reciclagem ativas de um usuário autenticado e retorna uma lista de DTOs com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Metas de reciclagem listadas com sucesso",
+            content = @Content(schema = @Schema(implementation = RecycleGoalResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "progress": 75.5,
+                            "difficult": "NORMAL",
+                            "frequency": "WEEKLY",
+                            "nextCheck": "2026-03-01"
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Nenhuma meta de reciclagem encontrada para o usuário")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/auth/active/dto")
+    public ResponseEntity<List<RecycleGoalResponseDTO>> getActiveRecycleGoalsByUserEmailAuthDto(Authentication authentication) {
+        try {
+            return new ResponseEntity<>(service.getActiveByUserEmailAsDto(authentication.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
      * Método GET para listar metas de reciclagem ativas de um usuário pelo email com paginação
      * @param email O email do usuário
      * @param pageable Configurações de paginação

@@ -197,7 +197,7 @@ public class FriendRequestService {
 
         FriendRequest friendRequest = this.getByTargetIdAndSenderEmail(userId, email);
 
-        if ( ! friendRequest.getTarget().getCredential().getEmail().equals(email) ) {
+        if ( ! friendRequest.getSender().getCredential().getEmail().equals(email) ) {
             throw new DeniedRequestException("A solicitação em questão não lhe pertence");
         }
 
@@ -314,6 +314,19 @@ public class FriendRequestService {
         }
 
         throw new NotFoundException("Usuário não encontrado com o ID " + targetId + " ou e-mail " + senderEmail);
+    }
+
+    /**
+     * Obtém uma solicitação de amizade como DTO por ID do destinatário e email do remetente
+     * @param targetId o ID do usuário destinatário
+     * @param senderEmail o email do usuário remetente
+     * @return a solicitação de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado ou a solicitação não existir
+     */
+    @Transactional(readOnly = true)
+    public FriendRequestResponseDTO getByTargetIdAndSenderEmailAsDTO(Long targetId, String senderEmail) {
+        FriendRequest friendRequest = this.getByTargetIdAndSenderEmail(targetId, senderEmail);
+        return new FriendRequestResponseDTO(friendRequest);
     }
 
     /**
@@ -569,6 +582,21 @@ public class FriendRequestService {
     }
 
     /**
+     * Contabiliza quantas solicitações de amizade o usuário recebeu
+     * @param email o email do usuário destinatário
+     * @return o número de solicitações recebidas
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public long countReceivedRequests(String email) {
+        if (regularUserService.existsByEmail(email)) {
+            return repository.countByTarget_Credential_Email(email);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o email: " + email);
+    }
+
+    /**
      * Verifica se existe uma solicitação de amizade entre emails de remetente e destinatário
      * @param senderEmail o email do usuário remetente
      * @param targetEmail o email do usuário destinatário
@@ -576,12 +604,44 @@ public class FriendRequestService {
      * @throws NotFoundException quando algum usuário não for encontrado
      */
     @Transactional(readOnly = true)
-    public boolean existsBySenderAndTargetEmail(String senderEmail, String targetEmail) {
+    public boolean existsBySenderAndTargetId(String senderEmail, String targetEmail) {
         if (regularUserService.existsByEmail(senderEmail) && regularUserService.existsByEmail(targetEmail)) {
             return repository.existsBySender_Credential_EmailAndTarget_Credential_Email(senderEmail, targetEmail);
         }
 
         throw new NotFoundException("Usuário não encontrado com o e-mail fornecido");
+    }
+
+    /**
+     * Verifica se existe uma solicitação de amizade entre email do remetente e ID do destinatário
+     * @param senderEmail o email do usuário remetente
+     * @param targetId o ID do usuário destinatário
+     * @return true se existir, false caso contrário
+     * @throws NotFoundException quando algum usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsBySenderEmailAndTargetId(String senderEmail, Long targetId) {
+        if (regularUserService.existsByEmail(senderEmail) && regularUserService.existsById(targetId)) {
+            return repository.existsBySender_Credential_EmailAndTargetId(senderEmail, targetId);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o e-mail ou ID fornecido");
+    }
+
+    /**
+     * Verifica se existe uma solicitação de amizade entre ID do remetente e email do destinatário
+     * @param senderId o ID do usuário remetente
+     * @param targetEmail o email do usuário destinatário
+     * @return true se existir, false caso contrário
+     * @throws NotFoundException quando algum usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean existsBySenderIdAndTargetEmail(Long senderId, String targetEmail) {
+        if (regularUserService.existsById(senderId) && regularUserService.existsByEmail(targetEmail)) {
+            return repository.existsBySenderIdAndTarget_Credential_Email(senderId, targetEmail);
+        }
+
+        throw new NotFoundException("Usuário não encontrado com o ID ou e-mail fornecido");
     }
 
     /**
@@ -664,5 +724,86 @@ public class FriendRequestService {
         }
 
         throw new EntityNotFoundException("Solicitação de amizade não encontrada com o ID " + id);
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO por ID do destinatário (retornando os senders)
+     * @param targetId o ID do usuário destinatário
+     * @return lista de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getByTargetIdAsDTO(Long targetId) {
+        List<FriendRequest> requests = this.getAllByTargetId(targetId);
+        return requests.stream()
+                .map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getSender()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO com paginação por ID do destinatário (retornando os senders)
+     * @param targetId o ID do usuário destinatário
+     * @param pageable Configurações de paginação
+     * @return página de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<FriendRequestResponseDTO> getByTargetIdAsDTO(Long targetId, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<FriendRequest> requests = repository.findByTargetId(targetId, pageable);
+        return requests.map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getSender()));
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO por email do remetente (retornando os targets)
+     * @param senderEmail o email do usuário remetente
+     * @return lista de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getBySenderEmailAsDTO(String senderEmail) {
+        List<FriendRequest> requests = this.getBySenderEmail(senderEmail);
+        return requests.stream()
+                .map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getTarget()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO com paginação por email do remetente (retornando os targets)
+     * @param senderEmail o email do usuário remetente
+     * @param pageable Configurações de paginação
+     * @return página de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<FriendRequestResponseDTO> getBySenderEmailAsDTO(String senderEmail, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<FriendRequest> requests = repository.findBySender_Credential_Email(senderEmail, pageable);
+        return requests.map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getTarget()));
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO por email do destinatário (retornando os senders)
+     * @param targetEmail o email do usuário destinatário
+     * @return lista de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public List<FriendRequestResponseDTO> getByTargetEmailAsDTO(String targetEmail) {
+        List<FriendRequest> requests = this.getByTargetEmail(targetEmail);
+        return requests.stream()
+                .map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getSender()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Obtém solicitações de amizade como DTO com paginação por email do destinatário (retornando os senders)
+     * @param targetEmail o email do usuário destinatário
+     * @param pageable Configurações de paginação
+     * @return página de solicitações de amizade em forma de {@link FriendRequestResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<FriendRequestResponseDTO> getByTargetEmailAsDTO(String targetEmail, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<FriendRequest> requests = repository.findByTarget_Credential_Email(targetEmail, pageable);
+        return requests.map(request -> new FriendRequestResponseDTO(request, (RegularUser) request.getSender()));
     }
 }

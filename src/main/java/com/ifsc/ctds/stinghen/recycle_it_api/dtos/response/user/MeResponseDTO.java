@@ -14,18 +14,32 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SimpleUserResponseDTO implements ResponseDTO {
+public class MeResponseDTO implements ResponseDTO {
 
     public Long id;
 
-    public String name;
+    public Long gems;
+
+    public String email;
 
     public Avatar avatar;
 
-    public SimpleUserResponseDTO(RegularUser user) {
+    public boolean isDev;
+
+    public MeResponseDTO(RegularUser user) {
         this.id = user.getId();
-        this.name = user.getName();
+        this.gems = user.getRecycleGems();
+        this.email = user.getCredential().getEmail();
         this.avatar = user.getCurrentAvatar();
+        this.isDev = false; // Default value, will be set by service
+    }
+
+    public MeResponseDTO(RegularUser user, boolean isDev) {
+        this.id = user.getId();
+        this.gems = user.getRecycleGems();
+        this.email = user.getCredential().getEmail();
+        this.avatar = user.getCurrentAvatar();
+        this.isDev = isDev;
     }
 
 }

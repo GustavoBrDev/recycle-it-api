@@ -1,6 +1,9 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.project;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.OtherMaterialRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.OtherMaterialPutRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.OtherMaterials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.OtherMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.OtherMaterialService;
@@ -41,6 +44,74 @@ public class OtherMaterialController {
      * @see OtherMaterialService
      */
     private final OtherMaterialService service;
+
+    /**
+     * Método POST para criar um novo outro material
+     * @param requestDTO O DTO com os dados do outro material a ser criado
+     * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
+     * @see OtherMaterialService#create(OtherMaterialRequestDTO)
+     */
+    @Tag(name = "Outros Materiais", description = "Recurso para gerenciamento de outros materiais")
+    @Operation(summary = "Cria um novo outro material", description = "Cria um novo outro material e retorna feedback da operação com o status HTTP 201")
+    @ApiResponse(responseCode = "201", description = "Outro material criado com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Outro material criado com sucesso",
+                        "content": null,
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao criar outro material")
+    @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PostMapping
+    public ResponseEntity<ResponseDTO> createOtherMaterial(
+            @RequestBody @Parameter(required = true) OtherMaterialRequestDTO requestDTO) {
+        try {
+            return new ResponseEntity<>(service.create(requestDTO), HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Método PUT para atualizar um outro material existente
+     * @param id O ID do outro material a ser atualizado
+     * @param requestDTO O DTO com os dados atualizados do outro material
+     * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
+     * @see OtherMaterialService#update(Long, OtherMaterialPutRequestDTO)
+     */
+    @Tag(name = "Outros Materiais", description = "Recurso para gerenciamento de outros materiais")
+    @Operation(summary = "Atualiza um outro material", description = "Atualiza um outro material existente e retorna feedback da operação com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Outro material atualizado com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Outro material atualizado com sucesso",
+                        "content": null,
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao atualizar outro material")
+    @ApiResponse(responseCode = "404", description = "Outro material não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseDTO> updateOtherMaterial(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
+            @RequestBody @Parameter(required = true) OtherMaterialPutRequestDTO requestDTO) {
+        try {
+            return new ResponseEntity<>(service.update(id, requestDTO), HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 
     /**
      * Método PATCH para atualizar o tipo de um outro material

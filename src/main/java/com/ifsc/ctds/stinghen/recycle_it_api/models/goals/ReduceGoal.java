@@ -1,5 +1,6 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.models.goals;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
@@ -18,7 +19,7 @@ import java.util.List;
 @Entity
 public class ReduceGoal extends Goal {
 
-    @OneToMany
+    @OneToMany (cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReduceItem> items;
 
     private int skipDaysLeft;

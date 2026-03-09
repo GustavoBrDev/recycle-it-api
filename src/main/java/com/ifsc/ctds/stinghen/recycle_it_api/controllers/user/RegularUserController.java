@@ -1,10 +1,16 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.user;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.PasswordUpdateRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserPutRequestDTO;
-import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.DeniedRequestException;
+import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.user.RegularUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,45 +52,6 @@ public class RegularUserController {
      * @see RegularUserService
      */
     private RegularUserService service;
-
-    /**
-     * Método POST para criar um novo usuário
-     * @param requestDTO A {@link RegularUserRequestDTO} contendo os dados do usuário
-     * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
-     * @see RegularUserService#create(RegularUserRequestDTO), RegularUserRequestDTO
-     */
-    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Cria um novo usuário", description = "Cria um novo usuário e retorna feedback da operação com o status HTTP 201")
-    @ApiResponse(responseCode = "201", description = "Uuário criado com sucesso",
-            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
-            examples = @ExampleObject(value = """
-                    {
-                        "mainMessage": "Cadastro Efetuado",
-                        "content": null,
-                        "isAlert": false,
-                        "isError": false
-                    }
-                    """)))
-    @ApiResponse(responseCode = "400", description = "Erro ao criar usuário - email já existe ou dados inválidos")
-    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @PostMapping
-    public ResponseEntity<FeedbackResponseDTO> createUser(
-            @RequestBody @Parameter(required = true, 
-            content = @Content(schema = @Schema(implementation = RegularUserRequestDTO.class)),
-            example = """
-                    {
-                        "email": "usuario@exemplo.com",
-                        "password": "SenhaForte123!",
-                        "avatar": "earth",
-                        "name": "Nome do Usuário"
-                    }
-                    """) @Valid RegularUserRequestDTO requestDTO) {
-        try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
 
     /**
      * Método PUT para atualizar um usuário existente
@@ -154,9 +122,44 @@ public class RegularUserController {
     @PatchMapping("/{id}/avatar")
     public ResponseEntity<FeedbackResponseDTO> updateAvatar(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestBody @Parameter(required = true, example = "earth") Avatar avatar) {
+            @RequestBody @Parameter(required = true, example = "terra") Avatar avatar) {
         try {
             return new ResponseEntity<>((FeedbackResponseDTO) service.editAvatar(id, avatar), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Método PATCH para atualizar o avatar do usuário autenticado
+     * @param avatar O novo avatar
+     * @param authentication O objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
+     * @see RegularUserService#editAvatarByEmail(String, Avatar)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Atualiza o avatar do usuário autenticado", description = "Atualiza o avatar do usuário autenticado e retorna feedback da operação com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Avatar atualizado com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Avatar atualizado com sucesso",
+                        "content": "Seu avatar foi atualizado",
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao atualizar avatar")
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PatchMapping("/avatar")
+    public ResponseEntity<FeedbackResponseDTO> updateAvatarAuthenticated(
+            @RequestParam @Parameter(required = true, example = "terra") Avatar avatar,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>((FeedbackResponseDTO) service.editAvatarByEmail(email, avatar), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -197,35 +200,45 @@ public class RegularUserController {
     }
 
     /**
-     * Método PATCH para atualizar a senha de um usuário
-     * @param id O ID do usuário a ser atualizado
-     * @param password A nova senha
+     * Método PATCH para atualizar a senha do usuário autenticado
+     * @param requestDTO A {@link PasswordUpdateRequestDTO} contendo a senha atual e a nova senha
+     * @param authentication O objeto de autenticação para extrair o email do usuário
      * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see RegularUserService#editPassword(Long, String)
+     * @see RegularUserService#updatePasswordAuthenticated(String, String, String)
      */
     @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
-    @Operation(summary = "Atualiza a senha do usuário", description = "Atualiza a senha de um usuário existente e retorna feedback da operação com o status HTTP 200")
+    @Operation(summary = "Atualiza a senha do usuário autenticado", description = "Atualiza a senha do usuário autenticado validando a senha atual e retorna feedback da operação com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Senha atualizada com sucesso",
             content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
             examples = @ExampleObject(value = """
                     {
-                        "mainMessage": "Senha atualizada",
-                        "content": null,
+                        "mainMessage": "Senha atualizada com sucesso",
+                        "content": "Sua senha foi alterada",
                         "isAlert": false,
                         "isError": false
                     }
                     """)))
-    @ApiResponse(responseCode = "400", description = "Erro ao atualizar senha")
+    @ApiResponse(responseCode = "400", description = "Senha atual incorreta")
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{id}/password")
+    @PatchMapping("/password")
     public ResponseEntity<FeedbackResponseDTO> updatePassword(
-            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
-            @RequestBody @Parameter(required = true, example = "NovaSenhaForte123!") String password) {
+            @RequestBody @Parameter(required = true,
+            content = @Content(schema = @Schema(implementation = PasswordUpdateRequestDTO.class)),
+            example = """
+                    {
+                        "senhaAtual": "SenhaAntiga123!",
+                        "novaSenha": "NovaSenhaForte123!"
+                    }
+                    """) @Valid PasswordUpdateRequestDTO requestDTO,
+            Authentication authentication) {
         try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.editPassword(id, password), HttpStatus.OK);
-        } catch (Exception e) {
+            String email = authentication.getName();
+            return new ResponseEntity<>((FeedbackResponseDTO) service.updatePasswordAuthenticated(email, requestDTO.senhaAtual, requestDTO.novaSenha), HttpStatus.OK);
+        } catch (BadValueException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        } catch ( DeniedRequestException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -441,6 +454,41 @@ public class RegularUserController {
     }
 
     /**
+     * Método para remover um amigo do usuário autenticado
+     * @param friendId O ID do amigo a ser removido
+     * @param authentication O objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo o feedback da operação e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
+     * @see RegularUserService#removeFriendByEmail(String, Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Remove um amigo do usuário autenticado", description = "Remove um amigo da lista de amigos do usuário autenticado e retorna feedback da operação com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Amigo removido com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Amigo removido",
+                        "content": null,
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao remover amigo - relação não existente")
+    @ApiResponse(responseCode = "404", description = "Amigo não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PatchMapping("/friends/remove/{friendId}")
+    public ResponseEntity<FeedbackResponseDTO> removeFriendAuthenticated(
+            @PathVariable @Parameter(required = true, example = "2") @NotNull @Positive Long friendId,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>((FeedbackResponseDTO) service.removeFriendByEmail(email, friendId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * Método PATCH para adicionar um projeto ao usuário
      * @param userId O ID do usuário
      * @param projectId O ID do projeto a ser adicionado
@@ -580,6 +628,36 @@ public class RegularUserController {
     }
 
     /**
+     * Método GET para buscar informações necessárias do próprio usuário
+     * @return Um ResponseEntity contendo o usuário simplificado e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getMe(String), MeResponseDTO
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Busca usuário simplificado pelo email", description = "Busca um usuário simplificado pelo email e retorna o usuário com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso",
+            content = @Content(schema = @Schema(implementation = MeResponseDTO.class),
+                    examples = @ExampleObject(value = """
+                    {
+                        "id": 1,
+                        "gems": 50,
+                        "email": "gustavo.s041@aluno.ifsc.edu.br",
+                        "avatar": "terra"
+                    }
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/me")
+    public ResponseEntity<ResponseDTO> getMe(Authentication authentication ) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>( service.getMe( email, authentication ), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
      * Método GET para buscar um usuário completo pelo ID
      * @param id O ID do usuário a ser buscado
      * @return Um ResponseEntity contendo o usuário completo e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
@@ -593,7 +671,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "earth",
+                        "currentAvatar": "terra",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -637,12 +715,12 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "earth"
+                        "avatar": "terra"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @GetMapping("/public/{id}/simple")
+    @GetMapping("/{id}/simple")
     public ResponseEntity<SimpleUserResponseDTO> getSimpleById(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id) {
         try {
@@ -666,7 +744,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "currentAvatar": "earth",
+                        "currentAvatar": "terra",
                         "gems": 1000,
                         "friends": [],
                         "projects": [],
@@ -697,6 +775,48 @@ public class RegularUserController {
     }
 
     /**
+     * Método GET para buscar o perfil do usuário de forma completa
+     * @return Um ResponseEntity contendo o usuário completo e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getFullByEmail(String), FullUserResponseDTO
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Busca o perfil do usuário completo", description = "Busca um usuário completo pelo email da autenticação e retorna o usuário com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso",
+            content = @Content(schema = @Schema(implementation = FullUserResponseDTO.class),
+                    examples = @ExampleObject(value = """
+                    {
+                        "id": 1,
+                        "name": "Nome do Usuário",
+                        "currentAvatar": "terra",
+                        "gems": 1000,
+                        "friends": [],
+                        "projects": [],
+                        "articles": [],
+                        "punctuation": {
+                            "id": 1,
+                            "recyclePoints": 500,
+                            "position": 1
+                        },
+                        "league": {
+                            "id": 1,
+                            "name": "Liga Bronze",
+                            "tier": 1
+                        }
+                    }
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/profile")
+    public ResponseEntity<FullUserResponseDTO> getProfile(Authentication authentication){
+        try {
+            return new ResponseEntity<>((FullUserResponseDTO) service.getFullByEmail(authentication.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
      * Método GET para buscar um usuário simplificado pelo email
      * @param email O email do usuário a ser buscado
      * @return Um ResponseEntity contendo o usuário simplificado e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
@@ -710,7 +830,7 @@ public class RegularUserController {
                     {
                         "id": 1,
                         "name": "Nome do Usuário",
-                        "avatar": "earth"
+                        "avatar": "terra"
                     }
                     """)))
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
@@ -740,7 +860,7 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "avatar": "earth"
+                            "avatar": "terra"
                         },
                         {
                             "id": 2,
@@ -774,7 +894,7 @@ public class RegularUserController {
                         {
                             "id": 1,
                             "name": "Nome do Usuário 1",
-                            "currentAvatar": "earth",
+                            "currentAvatar": "terra",
                             "gems": 1000,
                             "friends": [],
                             "projects": [],
@@ -823,6 +943,138 @@ public class RegularUserController {
         try {
             Page<FullUserResponseDTO> users = service.getAll(pageable).map(FullUserResponseDTO::new);
             return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para obter os projetos iniciados por um usuário pelo ID como QuickProjectResponseDTO
+     * @param userId O ID do usuário
+     * @return Um ResponseEntity contendo a lista de projetos e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getProjectsByUserIdAsQuick(Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "[PUBLIC] Obtém os projetos iniciados por um usuário pelo ID (resumido)", description = "Obtém os projetos iniciados por um usuário pelo ID como DTO resumido e retorna a lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "description": "Transforme garrafas plásticas em objetos úteis",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 10
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/started/id/{userId}")
+    public ResponseEntity<List<QuickProjectResponseDTO>> getProjectsByUserIdAsQuick(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getProjectsByUserIdAsQuick(userId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para obter os projetos iniciados por um usuário pelo email como QuickProjectResponseDTO
+     * @param email O email do usuário
+     * @return Um ResponseEntity contendo a lista de projetos e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see RegularUserService#getProjectsByUserEmailAsQuick(String)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "[PUBLIC] Obtém os projetos iniciados por um usuário pelo email (resumido)", description = "Obtém os projetos iniciados por um usuário pelo email como DTO resumido e retorna a lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "description": "Transforme garrafas plásticas em objetos úteis",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 10
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/started/email/{email}")
+    public ResponseEntity<List<QuickProjectResponseDTO>> getProjectsByUserEmailAsQuick(
+            @PathVariable @Parameter(required = true, example = "usuario@exemplo.com") String email) {
+        try {
+            return new ResponseEntity<>(service.getProjectsByUserEmailAsQuick(email), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para verificar se um projeto foi iniciado pelo usuário autenticado
+     * @param projectId O ID do projeto a ser verificado
+     * @param authentication Informações de autenticação do usuário
+     * @return Um ResponseEntity contendo true se o projeto foi iniciado, false caso contrário, e o status HTTP 200 (OK)
+     * @see RegularUserService#isProjectStartedByUserEmail(String, Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Verifica se projeto foi iniciado pelo usuário", description = "Verifica se o usuário autenticado já iniciou um projeto específico e retorna boolean com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso",
+            content = @Content(schema = @Schema(implementation = Boolean.class),
+            examples = @ExampleObject(value = "true")))
+    @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/check-started/{projectId}")
+    public ResponseEntity<Boolean> isProjectStarted(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long projectId,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            boolean isStarted = service.isProjectStartedByUserEmail(email, projectId);
+            return new ResponseEntity<>(isStarted, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para verificar se o usuário autenticado é amigo de outro usuário pelo ID
+     * @param friendId O ID do amigo a ser verificado
+     * @param authentication Informações de autenticação do usuário
+     * @return Um ResponseEntity contendo true se são amigos, false caso contrário, e o status HTTP 200 (OK)
+     * @see RegularUserService#isFriendByEmailAndId(String, Long)
+     */
+    @Tag(name = "Usuários", description = "Recurso para gerenciamento de usuários comuns")
+    @Operation(summary = "Verifica se usuário é amigo de outro", description = "Verifica se o usuário autenticado é amigo de outro usuário pelo ID e retorna boolean com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso",
+            content = @Content(schema = @Schema(implementation = Boolean.class),
+            examples = @ExampleObject(value = "true")))
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/check-friend/{friendId}")
+    public ResponseEntity<Boolean> isFriend(
+            @PathVariable @Parameter(required = true, example = "2") @NotNull @Positive Long friendId,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            boolean isFriend = service.isFriendByEmailAndId(email, friendId);
+            return new ResponseEntity<>(isFriend, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

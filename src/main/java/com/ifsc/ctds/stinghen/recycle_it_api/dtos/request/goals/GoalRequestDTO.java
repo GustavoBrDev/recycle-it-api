@@ -7,6 +7,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.RecycledMateri
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -22,14 +23,15 @@ import lombok.NoArgsConstructor;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = RecycledMaterialRequestDTO.class, name = "RECYCLED"),
+        @JsonSubTypes.Type(value = RecycleGoalRequestDTO.class, name = "RECYCLE"),
+        @JsonSubTypes.Type(value = ReduceGoalRequestDTO.class, name = "REDUCE")
 })
 public abstract class GoalRequestDTO<T> implements ConvertibleRequestDTO<T> {
 
-    @NotBlank
+    @NotNull
     public GoalDifficult goalDifficult;
 
-    @NotBlank
+    @NotNull
     public GoalFrequency goalFrequency;
 
 }

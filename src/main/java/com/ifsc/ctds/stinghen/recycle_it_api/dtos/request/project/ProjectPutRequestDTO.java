@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * DTO para solicitação de projeto.
  */
-public class ProjectRequestDTO implements ConvertibleRequestDTO<Project> {
+public class ProjectPutRequestDTO implements ConvertibleRequestDTO<Project> {
 
     @NotBlank
     public String title;
@@ -20,29 +20,15 @@ public class ProjectRequestDTO implements ConvertibleRequestDTO<Project> {
     @NotBlank
     public String description;
 
-    @NotEmpty
-    public List<? extends ProjectMaterialRequestDTO<? extends ProjectMaterial>> materials;
-
     @NotBlank
     public String instructions;
 
     @Override
     public Project convert() {
-
-        Project project = Project.builder()
+        return Project.builder()
                 .title(title)
                 .description(description)
                 .instructions(instructions)
                 .build();
-
-        List<ProjectMaterial> materialList = materials.stream()
-                .map(ProjectMaterialRequestDTO::convert)
-                .collect(Collectors.toList());
-
-        materialList.forEach(material -> material.setProject(project));
-
-        project.setMaterials(materialList);
-
-        return project;
     }
 }

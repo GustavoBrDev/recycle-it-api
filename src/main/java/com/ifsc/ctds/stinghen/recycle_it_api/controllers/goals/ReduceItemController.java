@@ -3,6 +3,7 @@ package com.ifsc.ctds.stinghen.recycle_it_api.controllers.goals;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.goals.ReduceItemResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceItem;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.goals.ReduceItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -523,6 +526,137 @@ public class ReduceItemController {
             return new ResponseEntity<>((FeedbackResponseDTO) service.deleteById(id), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Método GET para listar itens para metas de redução do usuário autenticado (baseado em sua meta ativa)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo a lista de itens e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceItemService#getByUserEmail(String), List<ReduceItem>
+     */
+    @Tag(name = "Itens para Metas de Redução", description = "Recurso para gerenciamento de itens para metas de redução")
+    @Operation(summary = "[DEV] Lista itens para metas de redução do usuário autenticado", description = "Lista itens para metas de redução do usuário autenticado baseado em sua meta ativa e retorna uma lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Itens para metas de redução listados com sucesso",
+            content = @Content(schema = @Schema(implementation = ReduceItem.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "type": "PLASTIC",
+                            "targetQuantity": 100,
+                            "actualQuantity": 75
+                        },
+                        {
+                            "id": 2,
+                            "type": "GLASS",
+                            "targetQuantity": 150,
+                            "actualQuantity": 100
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
+    @GetMapping("/user/active")
+    public ResponseEntity<List<ReduceItem>> getReduceItemsByAuthenticatedUser(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getByUserEmail(email), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar itens para metas de redução do usuário autenticado com paginação (baseado em sua meta ativa)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de itens e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceItemService#getByUserEmail(String, Pageable), Page<ReduceItem>
+     */
+    @Tag(name = "Itens para Metas de Redução", description = "Recurso para gerenciamento de itens para metas de redução")
+    @Operation(summary = "[DEV] Lista itens para metas de redução do usuário autenticado com paginação", description = "Lista itens para metas de redução do usuário autenticado baseado em sua meta ativa com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Itens para metas de redução listados com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
+    @GetMapping("/user/active/paged")
+    public ResponseEntity<Page<ReduceItem>> getReduceItemsByAuthenticatedUserPaged(Authentication authentication, Pageable pageable) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getByUserEmail(email, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar itens para metas de redução de um usuário por ID (baseado em sua meta ativa)
+     * @param userId O ID do usuário
+     * @return Um ResponseEntity contendo a lista de itens e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceItemService#getByUserId(Long), List<ReduceItem>
+     */
+    @Tag(name = "Itens para Metas de Redução", description = "Recurso para gerenciamento de itens para metas de redução")
+    @Operation(summary = "[DEV] Lista itens para metas de redução de usuário por ID", description = "Lista itens para metas de redução de um usuário por ID baseado em sua meta ativa e retorna uma lista com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Itens para metas de redução listados com sucesso",
+            content = @Content(schema = @Schema(implementation = ReduceItem.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "type": "PLASTIC",
+                            "targetQuantity": 100,
+                            "actualQuantity": 75
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
+    @GetMapping("/user/{userId}/active")
+    public ResponseEntity<List<ReduceItem>> getReduceItemsByUserId(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getByUserId(userId), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar itens para metas de redução de um usuário por ID com paginação (baseado em sua meta ativa)
+     * @param userId O ID do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de itens e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ReduceItemService#getByUserId(Long, Pageable), Page<ReduceItem>
+     */
+    @Tag(name = "Itens para Metas de Redução", description = "Recurso para gerenciamento de itens para metas de redução")
+    @Operation(summary = "[DEV] Lista itens para metas de redução de usuário por ID com paginação", description = "Lista itens para metas de redução de um usuário por ID baseado em sua meta ativa com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Itens para metas de redução listados com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
+    @GetMapping("/user/{userId}/active/paged")
+    public ResponseEntity<Page<ReduceItem>> getReduceItemsByUserIdPaged(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
+            Pageable pageable) {
+        try {
+            return new ResponseEntity<>(service.getByUserId(userId, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -28,4 +28,8 @@ public abstract class ProjectMaterialRequestDTO<T> implements ConvertibleRequest
     @Positive
     public Long quantity;
 
+    @NotNull
+    @Positive
+    public Long projectId;
+
 }

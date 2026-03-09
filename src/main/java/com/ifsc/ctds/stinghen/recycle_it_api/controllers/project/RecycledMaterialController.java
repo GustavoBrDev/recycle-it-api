@@ -1,6 +1,9 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.project;
 
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.RecycledMaterialRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.RecycledMaterialPutRequestDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Materials;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.RecycledMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.project.RecycledMaterialService;
@@ -12,6 +15,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +44,72 @@ public class RecycledMaterialController {
      * @see RecycledMaterialService
      */
     private final RecycledMaterialService service;
+
+    /**
+     * Método POST para criar um novo material reciclado
+     * @param requestDTO O DTO com os dados do material reciclado a ser criado
+     * @return Um ResponseEntity contendo o feedback da criação e o status HTTP 201 (Created) ou o status HTTP 400 (Bad Request).
+     * @see RecycledMaterialService#create(RecycledMaterialRequestDTO)
+     */
+    @Tag(name = "Materiais Reciclados", description = "Recurso para gerenciamento de materiais reciclados")
+    @Operation(summary = "Cria um novo material reciclado", description = "Cria um novo material reciclado e retorna feedback da operação com o status HTTP 201")
+    @ApiResponse(responseCode = "201", description = "Material reciclado criado com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Material reciclado criado com sucesso",
+                        "content": null,
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao criar material reciclado")
+    @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PostMapping
+    public ResponseEntity<ResponseDTO> createRecycledMaterial(
+            @RequestBody @Parameter(required = true) RecycledMaterialRequestDTO requestDTO) {
+        try {
+            return new ResponseEntity<>(service.create(requestDTO), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Método PUT para atualizar um material reciclado existente
+     * @param id O ID do material reciclado a ser atualizado
+     * @param requestDTO O DTO com os dados atualizados do material reciclado
+     * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
+     * @see RecycledMaterialService#update(Long, RecycledMaterialPutRequestDTO)
+     */
+    @Tag(name = "Materiais Reciclados", description = "Recurso para gerenciamento de materiais reciclados")
+    @Operation(summary = "Atualiza um material reciclado", description = "Atualiza um material reciclado existente e retorna feedback da operação com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Material reciclado atualizado com sucesso",
+            content = @Content(schema = @Schema(implementation = FeedbackResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    {
+                        "mainMessage": "Material reciclado atualizado com sucesso",
+                        "content": null,
+                        "isAlert": false,
+                        "isError": false
+                    }
+                    """)))
+    @ApiResponse(responseCode = "400", description = "Erro ao atualizar material reciclado")
+    @ApiResponse(responseCode = "404", description = "Material reciclado não encontrado")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseDTO> updateRecycledMaterial(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
+            @RequestBody @Parameter(required = true) RecycledMaterialPutRequestDTO requestDTO) {
+        try {
+            return new ResponseEntity<>(service.update(id, requestDTO), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 
     /**
      * Método PATCH para atualizar o tipo de um material reciclado

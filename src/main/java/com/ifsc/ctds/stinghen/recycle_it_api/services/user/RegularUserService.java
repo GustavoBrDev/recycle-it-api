@@ -5,9 +5,13 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.user.RegularUserReques
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.FullUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.MeResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.user.SimpleUserResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.Avatar;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.BadValueException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.DeniedRequestException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.InvalidRelationshipException;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.article.Article;
@@ -15,6 +19,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
 import com.ifsc.ctds.stinghen.recycle_it_api.repository.user.RegularUserRepository;
+import com.ifsc.ctds.stinghen.recycle_it_api.security.models.UserCredentials;
 import com.ifsc.ctds.stinghen.recycle_it_api.security.repository.UserCredentialsRepository;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.article.ArticleService;
 import com.ifsc.ctds.stinghen.recycle_it_api.services.league.LeagueService;
@@ -27,6 +32,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,6 +94,8 @@ public class RegularUserService {
         }
 
         user.getCredential().setPassword( passwordEncoder.encode(user.getCredential().getPassword()));
+        credentialsRepository.save(user.getCredential());
+        user.setActualLeague( leagueService.getObjectByTier(1));
         user = repository.save(user);
         punctuationService.create(user);
 
@@ -145,6 +154,28 @@ public class RegularUserService {
     }
 
     /**
+     * Atualiza o avatar do usuário autenticado
+     * @param email o email do usuário autenticado
+     * @param avatar o novo avatar
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     */
+    @Transactional
+    public ResponseDTO editAvatarByEmail (String email, Avatar avatar ){
+
+        RegularUser user = getObjectByEmail(email);
+        user.setCurrentAvatar(avatar);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Avatar atualizado com sucesso")
+                .content("Seu avatar foi atualizado")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
      * Atualiza o nome de um usuário
      * @param id o id do usuário
      * @param name o novo nome
@@ -197,6 +228,42 @@ public class RegularUserService {
 
         throw new EntityNotFoundException("Usuário não encontrado com id: " + id);
 
+    }
+
+    /**
+     * Atualiza a senha do usuário autenticado validando a senha atual
+     * @param email o email do usuário autenticado
+     * @param senhaAtual a senha atual para validação
+     * @param novaSenha a nova senha a ser definida
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException quando o usuário não for encontrado
+     * @throws BadValueException quando a senha atual estiver incorreta
+     */
+    @Transactional
+    public ResponseDTO updatePasswordAuthenticated(String email, String senhaAtual, String novaSenha) {
+        RegularUser user = getObjectByEmail(email);
+        
+        // Verifica se a senha atual está correta
+        if (!passwordEncoder.matches(senhaAtual, user.getCredential().getPassword())) {
+            throw new DeniedRequestException("Senha atual incorreta");
+        }
+        
+        // Verifica se a nova senha é diferente da senha atual
+        if (passwordEncoder.matches(novaSenha, user.getCredential().getPassword())) {
+            throw new BadValueException("A nova senha deve ser diferente da senha atual");
+        }
+
+        
+        // Atualiza para a nova senha
+        user.getCredential().setPassword(passwordEncoder.encode(novaSenha));
+        repository.save(user);
+        
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Senha atualizada com sucesso")
+                .content("Sua senha foi alterada")
+                .isAlert(false)
+                .isError(false)
+                .build();
     }
 
     /**
@@ -426,6 +493,33 @@ public class RegularUserService {
     }
 
     /**
+     * Remove um amigo da lista de amigos do usuário autenticado
+     * @param email o email do usuário autenticado
+     * @param friendId o ID do usuário a ser removido
+     * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
+     * @throws EntityNotFoundException caso um dos usuários não seja encontrado
+     * @throws InvalidRelationshipException caso a relação seja inválida
+     */
+    @Transactional
+    public ResponseDTO removeFriendByEmail ( String email, Long friendId ){
+
+        RegularUser user = getObjectByEmail(email);
+
+        RegularUser friend = repository.findById(friendId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + friendId));
+
+        user.removeFriend(friend);
+        repository.save(user);
+
+        return FeedbackResponseDTO.builder()
+                .mainMessage("Amigo removido")
+                .content("O amigo foi removido da sua lista de amizades")
+                .isAlert(false)
+                .isError(false)
+                .build();
+    }
+
+    /**
      * Marca um projeto como em andamento
      * @param userId o ID do usuário base
      * @param projectId o ID do projeto a ser adicionado
@@ -628,6 +722,32 @@ public class RegularUserService {
     }
 
     /**
+     * Obtém informações do usuário atual
+     * @param email o e-mail do usuário
+     * @return o usuário em forma da DTO {@link MeResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional (readOnly = true)
+    public ResponseDTO getMe ( String email ){
+        return new MeResponseDTO(getObjectByEmail(email));
+    }
+
+    /**
+     * Obtém informações do usuário atual com verificação de role DEV
+     * @param email o e-mail do usuário
+     * @param authentication o objeto de autenticação do Spring Security
+     * @return o usuário em forma da DTO {@link MeResponseDTO}
+     * @throws NotFoundException quando o usuário não for encontrado
+     */
+    @Transactional (readOnly = true)
+    public ResponseDTO getMe ( String email, Authentication authentication ){
+        RegularUser user = getObjectByEmail(email);
+        boolean isDev = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_DEV"));
+        return new MeResponseDTO(user, isDev);
+    }
+
+    /**
      * Obtém todos os usuários
      * @return lista de usuários em forma de {@link RegularUser}
      */
@@ -772,4 +892,94 @@ public class RegularUserService {
     public Page<RegularUser> getByActualLeagueId(Long leagueId, Pageable pageable) {
         return repository.findByActualLeague_Id(leagueId, pageable);
     }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo ID
+     * @param userId o ID do usuário
+     * @return lista de projetos em forma de {@link Project}
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getProjectsByUserId(Long userId) {
+        return this.getObjectById(userId).getProjects();
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo ID como QuickProjectResponseDTO
+     * @param userId o ID do usuário
+     * @return lista de projetos em forma de {@link QuickProjectResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<QuickProjectResponseDTO> getProjectsByUserIdAsQuick(Long userId) {
+        // Verifica se o usuário existe antes de buscar os projetos
+        if (!repository.existsById(userId)) {
+            throw new EntityNotFoundException("Usuário não encontrado com id: " + userId);
+        }
+        return repository.findProjectsByUserIdAsQuick(userId);
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo email
+     * @param email o email do usuário
+     * @return lista de projetos em forma de {@link Project}
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getProjectsByUserEmail(String email) {
+        return this.getObjectByEmail(email).getProjects();
+    }
+
+    /**
+     * Obtém os projetos iniciados por um usuário pelo email como QuickProjectResponseDTO
+     * @param email o email do usuário
+     * @return lista de projetos em forma de {@link QuickProjectResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<QuickProjectResponseDTO> getProjectsByUserEmailAsQuick(String email) {
+        // Verifica se o usuário existe antes de buscar os projetos
+        if (!this.existsByEmail(email)) {
+            throw new EntityNotFoundException("Usuário não encontrado com email: " + email);
+        }
+        return repository.findProjectsByUserEmailAsQuick(email);
+    }
+
+    /**
+     * Verifica se um usuário está realizando um projeto específico
+     * @param userId o ID do usuário
+     * @param projectId o ID do projeto
+     * @return true se o usuário está realizando o projeto, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean isProjectStartedByUserId(Long userId, Long projectId) {
+        return repository.existsProjectByUserId(userId, projectId);
+    }
+
+    /**
+     * Verifica se um usuário está realizando um projeto específico pelo email
+     * @param email o email do usuário
+     * @param projectId o ID do projeto
+     * @return true se o usuário está realizando o projeto, false caso contrário
+     */
+    @Transactional(readOnly = true)
+    public boolean isProjectStartedByUserEmail(String email, Long projectId) {
+        return repository.existsProjectByUserEmail(email, projectId);
+    }
+
+    /**
+     * Verifica se um usuário (email) é amigo de outro usuário (id)
+     * @param email o email do primeiro usuário
+     * @param friendId o ID do segundo usuário (amigo)
+     * @return true se são amigos, false caso contrário
+     * @throws EntityNotFoundException quando um dos usuários não for encontrado
+     */
+    @Transactional(readOnly = true)
+    public boolean isFriendByEmailAndId(String email, Long friendId) {
+        if (!this.existsByEmail(email)) {
+            throw new EntityNotFoundException("Usuário não encontrado com email: " + email);
+        }
+        if (!this.existsById(friendId)) {
+            throw new EntityNotFoundException("Usuário não encontrado com ID: " + friendId);
+        }
+        return repository.isFriendByEmailAndId(email, friendId);
+    }
+
+
 }

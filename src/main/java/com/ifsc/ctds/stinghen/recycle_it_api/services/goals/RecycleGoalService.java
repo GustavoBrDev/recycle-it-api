@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service para os métodos específicos de metas de reciclagem
@@ -53,6 +53,10 @@ public class RecycleGoalService {
         goal.setUser(user);
         Long userId = user.getId();
         
+        // Calcula o nextCheck baseado na frequência e fuso horário de Brasília
+        LocalDate today = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        goal.setNextCheck(calculateNextCheck(today, goal.getFrequency()));
+        
         // Verifica se já existe uma meta ativa do mesmo tipo para o usuário
         List<RecycleGoal> activeGoals = getActiveByUserId(userId);
         
@@ -67,9 +71,6 @@ public class RecycleGoalService {
                 RecycleGoal existingNextGoal = nextGoals.get(0);
                 existingNextGoal.setDifficult(goal.getDifficult());
                 existingNextGoal.setFrequency(goal.getFrequency());
-                existingNextGoal.setMultiplier(goal.getMultiplier());
-                existingNextGoal.setNextCheck(goal.getNextCheck());
-                existingNextGoal.setProgress(goal.getProgress());
                 repository.save(existingNextGoal);
                 
                 return FeedbackResponseDTO.builder()
@@ -298,6 +299,17 @@ public class RecycleGoalService {
     }
 
     /**
+     * Obtém todas as metas de reciclagem ativas de um usuário por email como DTOs (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link RecycleGoalResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<RecycleGoalResponseDTO> getActiveByUserEmailAsDto(String email) {
+        List<RecycleGoal> goals = repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL);
+        return goals.stream().map(RecycleGoalResponseDTO::new).toList();
+    }
+
+    /**
      * Obtém todas as metas de reciclagem ativas de um usuário por email (com paginação)
      * @param email o email do usuário
      * @param pageable as configurações de paginação
@@ -453,6 +465,25 @@ public class RecycleGoalService {
             case difficult -> 4;
             case hard -> 6;
             default -> 1;
+        };
+    }
+
+    /**
+     * Calcula a próxima data de verificação baseado na frequência
+     * @param currentDate data atual no fuso horário de Brasília
+     * @param frequency frequência da meta
+     * @return próxima data de verificação
+     */
+    private LocalDate calculateNextCheck(LocalDate currentDate, GoalFrequency frequency) {
+        if (frequency == null) {
+            return currentDate.plusMonths(1); // Padrão: mensal
+        }
+        
+        return switch (frequency) {
+            case weekly -> currentDate.plusWeeks(1);
+            case monthly -> currentDate.plusMonths(1);
+            case quarterly -> currentDate.plusMonths(3);
+            case yearly -> currentDate.plusYears(1);
         };
     }
 }

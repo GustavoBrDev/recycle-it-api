@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
         @JsonSubTypes.Type(value = FullRecycledMaterialResponseDTO.class, name = "RECYCLED"),
         @JsonSubTypes.Type(value = FullOtherMaterialResponseDTO.class, name = "OTHER")
 })
-public class FullProjectMaterialResponseDTO implements ResponseDTO {
+public abstract class FullProjectMaterialResponseDTO implements ResponseDTO {
 
     public Long id;
     public Long quantity;

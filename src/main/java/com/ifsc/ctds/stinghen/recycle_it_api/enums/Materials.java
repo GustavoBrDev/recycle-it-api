@@ -4,8 +4,7 @@ public enum Materials {
     plastic,
     glass,
     paper,
-    metal,
-    textile;
+    metal;
 
     public String getValue() {
         return this.name();

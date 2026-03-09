@@ -12,7 +12,7 @@ import jakarta.validation.constraints.PositiveOrZero;
  */
 public class ReduceItemRequestDTO implements ConvertibleRequestDTO<ReduceItem> {
 
-    @NotBlank
+    @NotNull
     public Materials type;
 
     @NotNull
@@ -24,7 +24,7 @@ public class ReduceItemRequestDTO implements ConvertibleRequestDTO<ReduceItem> {
         return ReduceItem.builder()
                 .type(this.type)
                 .targetQuantity(this.quantity)
-                .actualQuantity(this.quantity)
+                .actualQuantity(0)
                 .build();
     }
 }

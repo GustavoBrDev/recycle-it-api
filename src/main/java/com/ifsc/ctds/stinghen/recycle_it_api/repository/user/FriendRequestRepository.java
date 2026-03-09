@@ -36,4 +36,8 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     
     boolean existsBySenderIdAndTargetId(Long senderId, Long targetId);
     boolean existsBySender_Credential_EmailAndTarget_Credential_Email(String senderEmail, String targetEmail);
+    boolean existsBySender_Credential_EmailAndTargetId(String senderEmail, Long targetId);
+    boolean existsBySenderIdAndTarget_Credential_Email(Long senderId, String targetEmail);
+    
+    long countByTarget_Credential_Email(String targetEmail);
 }

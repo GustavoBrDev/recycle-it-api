@@ -4,6 +4,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.UserCommentResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.UserNotInActiveLeagueException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.UserComment;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.User;
@@ -41,7 +42,6 @@ public class UserCommentService {
      * @param projectId o id do projeto ao qual o comentário pertence
      * @return uma {@link ResponseDTO} do tipo {@link FeedbackResponseDTO} informando o status da operação
      */
-    @Transactional
     public ResponseDTO create(String comment, String userEmail, Long projectId) {
 
         RegularUser user = userService.getObjectByEmail(userEmail);

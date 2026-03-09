@@ -5,6 +5,7 @@ import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.goals.ReduceGoalResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalDifficult;
+import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalFrequency;
 import com.ifsc.ctds.stinghen.recycle_it_api.enums.GoalStatus;
 import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.goals.ReduceGoal;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -51,6 +54,10 @@ public class ReduceGoalService {
         RegularUser user = userService.getObjectByEmail(email);
         goal.setUser(user);
         Long userId = user.getId();
+        
+        // Calcula o nextCheck baseado na frequência e fuso horário de Brasília
+        LocalDate today = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        goal.setNextCheck(calculateNextCheck(today, goal.getFrequency()));
         
         // Verifica se já existe uma meta ativa do mesmo tipo para o usuário
         List<ReduceGoal> activeGoals = getActiveByUserId(userId);
@@ -507,6 +514,17 @@ public class ReduceGoalService {
     }
 
     /**
+     * Obtém todas as metas de redução ativas de um usuário por email como DTOs (sem paginação)
+     * @param email o email do usuário
+     * @return lista de metas em forma de {@link ReduceGoalResponseDTO}
+     */
+    @Transactional(readOnly = true)
+    public List<ReduceGoalResponseDTO> getActiveByUserEmailAsDto(String email) {
+        List<ReduceGoal> goals = repository.findByUser_Credential_EmailAndStatus(email, GoalStatus.ACTUAL);
+        return goals.stream().map(ReduceGoalResponseDTO::new).toList();
+    }
+
+    /**
      * Obtém todas as metas de redução ativas de um usuário por email (com paginação)
      * @param email o email do usuário
      * @param pageable as configurações de paginação
@@ -579,5 +597,24 @@ public class ReduceGoalService {
         }
 
         throw new EntityNotFoundException("Meta de redução não encontrada com o ID " + id);
+    }
+
+    /**
+     * Calcula a próxima data de verificação baseado na frequência
+     * @param currentDate data atual no fuso horário de Brasília
+     * @param frequency frequência da meta
+     * @return próxima data de verificação
+     */
+    private LocalDate calculateNextCheck(LocalDate currentDate, GoalFrequency frequency) {
+        if (frequency == null) {
+            return currentDate.plusMonths(1); // Padrão: mensal
+        }
+        
+        return switch (frequency) {
+            case weekly -> currentDate.plusWeeks(1);
+            case monthly -> currentDate.plusMonths(1);
+            case quarterly -> currentDate.plusMonths(3);
+            case yearly -> currentDate.plusYears(1);
+        };
     }
 }

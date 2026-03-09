@@ -1,11 +1,13 @@
 package com.ifsc.ctds.stinghen.recycle_it_api.controllers.project;
 
+import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectPutRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.request.project.ProjectRequestDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.FeedbackResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.ResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.FullProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.ProjectResponseDTO;
 import com.ifsc.ctds.stinghen.recycle_it_api.dtos.response.project.QuickProjectResponseDTO;
+import com.ifsc.ctds.stinghen.recycle_it_api.exceptions.NotFoundException;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.Project;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.project.ProjectMaterial;
 import com.ifsc.ctds.stinghen.recycle_it_api.models.user.RegularUser;
@@ -92,6 +94,7 @@ public class ProjectController {
         try {
             return new ResponseEntity<>((FeedbackResponseDTO) service.create(requestDTO), HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -99,9 +102,9 @@ public class ProjectController {
     /**
      * Método PUT para atualizar um projeto existente
      * @param id O ID do projeto a ser atualizado
-     * @param requestDTO A {@link ProjectRequestDTO} contendo os dados atualizados
+     * @param requestDTO A {@link ProjectPutRequestDTO} contendo os dados atualizados
      * @return Um ResponseEntity contendo o feedback da atualização e o status HTTP 200 (OK) ou o status HTTP 400 (Bad Request).
-     * @see ProjectService#update(Long, ProjectRequestDTO), ProjectRequestDTO
+     * @see ProjectService#update(Long, ProjectPutRequestDTO) 
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
     @Operation(summary = "Atualiza um projeto", description = "Atualiza um projeto existente e retorna feedback da operação com o status HTTP 200")
@@ -120,25 +123,19 @@ public class ProjectController {
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
     @PutMapping("/{id}")
-    public ResponseEntity<FeedbackResponseDTO> updateProject(
+    public ResponseEntity<ResponseDTO> updateProject(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true,
             content = @Content(schema = @Schema(implementation = ProjectRequestDTO.class)),
             example = """
                     {
                         "text": "Projeto atualizado de reciclagem",
-                        "description": "Descrição atualizada do projeto",
-                        "materials": [
-                            {
-                                "material": "PLASTIC",
-                                "quantity": 15
-                            }
-                        ],
+                        "description": "Descrição atualizada do projeto"
                         "instructions": "Instruções atualizadas"
                     }
-                    """) @Valid ProjectRequestDTO requestDTO) {
+                    """) @Valid ProjectPutRequestDTO requestDTO) {
         try {
-            return new ResponseEntity<>((FeedbackResponseDTO) service.update(id, requestDTO), HttpStatus.OK);
+            return new ResponseEntity<>( service.update(id, requestDTO), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -167,7 +164,7 @@ public class ProjectController {
     @ApiResponse(responseCode = "404", description = "Projeto não encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @SecurityRequirement(name = "Bearer")
-    @PatchMapping("/{id}/text")
+    @PatchMapping("/{id}/title")
     public ResponseEntity<FeedbackResponseDTO> updateProjectText(
             @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long id,
             @RequestBody @Parameter(required = true, example = "Novo texto do projeto") String text) {
@@ -470,6 +467,7 @@ public class ProjectController {
         }
     }
 
+
     /**
      * Método GET para buscar um projeto como DTO pelo ID
      * @param id O ID do projeto a ser buscado
@@ -725,7 +723,7 @@ public class ProjectController {
                             "materials": [
                                 {
                                     "id": 2,
-                                    "material": "PAPER",
+                   f                 "material": "PAPER",
                                     "quantity": 5
                                 }
                             ],
@@ -783,6 +781,7 @@ public class ProjectController {
         try {
             return new ResponseEntity<>(service.getAllQuick(pageable), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -858,7 +857,7 @@ public class ProjectController {
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @GetMapping("/public/filtered")
-    public ResponseEntity<Page<ProjectResponseDTO>> getFilteredProjects(
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getFilteredProjects(
             @RequestParam @Parameter(required = true, example = "plástico") String search) {
         try {
             return new ResponseEntity<>(service.getFiltered(search), HttpStatus.OK);
@@ -875,18 +874,18 @@ public class ProjectController {
      * @see ProjectService#getFiltered(String, Pageable), Page<ProjectResponseDTO>
      */
     @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
-    @Operation(summary = "Busca projetos filtrados com paginação", description = "Busca projetos filtrados por termo de busca com paginação e retorna uma página com o status HTTP 200")
+    @Operation(summary = "[PUBLIC] Busca projetos filtrados com paginação", description = "Busca projetos filtrados por termo de busca com paginação e retorna uma página com o status HTTP 200")
     @ApiResponse(responseCode = "200", description = "Projetos encontrados com sucesso")
     @ApiResponse(responseCode = "404", description = "Nenhum projeto encontrado")
     @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    @SecurityRequirement(name = "Bearer")
-    @GetMapping("/filtered/paged")
-    public ResponseEntity<Page<ProjectResponseDTO>> getFilteredProjectsPaged(
+    @GetMapping("/public/filtered/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getFilteredProjectsPaged(
             @RequestParam @Parameter(required = true, example = "plástico") String search,
             Pageable pageable) {
         try {
             return new ResponseEntity<>(service.getFiltered(search, pageable), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -925,6 +924,419 @@ public class ProjectController {
             return new ResponseEntity<>(service.getFilteredAsQuick(search), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados baseados na meta de redução do usuário autenticado
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoal(String), Page<ProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados baseados na meta de redução do usuário autenticado", description = "Obtém projetos recomendados baseados nos materiais da meta de redução ativa do usuário autenticado e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "difficulty": "FÁCIL",
+                            "estimatedTime": 30
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoal(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoal(email), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados baseados na meta de redução do usuário autenticado (paginado)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoal(String, Pageable), Page<ProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados baseados na meta de redução do usuário autenticado (paginado)", description = "Obtém projetos recomendados baseados nos materiais da meta de redução ativa do usuário autenticado com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalPaged(Authentication authentication, Pageable pageable) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoal(email, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados como QuickDTO baseados na meta de redução do usuário autenticado
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoalAsQuick(String), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "[DEV] Obtém projetos recomendados como QuickDTO baseados na meta de redução do usuário autenticado", description = "Obtém projetos recomendados como QuickDTO baseados nos materiais da meta de redução ativa do usuário autenticado e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 5
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @PreAuthorize("hasRole('DEV')")
+    @GetMapping("/recommended/reduce-goal/quick")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalAsQuick(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoalAsQuick(email), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados como QuickDTO baseados na meta de redução do usuário autenticado (paginado)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoalAsQuick(String, Pageable), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados como QuickDTO baseados na meta de redução do usuário autenticado (paginado)", description = "Obtém projetos recomendados como QuickDTO baseados nos materiais da meta de redução ativa do usuário autenticado com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/quick/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalAsQuickPaged(Authentication authentication, Pageable pageable) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoalAsQuick(email, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados baseados na meta de redução de um usuário por ID
+     * @param userId O ID do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoal(Long), Page<ProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados baseados na meta de redução de usuário por ID", description = "Obtém projetos recomendados baseados nos materiais da meta de redução ativa de um usuário por ID e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "difficulty": "FÁCIL",
+                            "estimatedTime": 30
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}")
+    public ResponseEntity<Page<ProjectResponseDTO>> getRecommendedProjectsByReduceGoalByUserId(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoal(userId), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados baseados na meta de redução de um usuário por ID (paginado)
+     * @param userId O ID do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoal(Long, Pageable), Page<ProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados baseados na meta de redução de usuário por ID (paginado)", description = "Obtém projetos recomendados baseados nos materiais da meta de redução ativa de um usuário por ID com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}/paged")
+    public ResponseEntity<Page<ProjectResponseDTO>> getRecommendedProjectsByReduceGoalByUserIdPaged(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
+            Pageable pageable) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoal(userId, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados como QuickDTO baseados na meta de redução de um usuário por ID
+     * @param userId O ID do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoalAsQuick(Long), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados como QuickDTO baseados na meta de redução de usuário por ID", description = "Obtém projetos recomendados como QuickDTO baseados nos materiais da meta de redução ativa de um usuário por ID e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 5
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}/quick")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalAsQuickByUserId(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoalAsQuick(userId), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para obter projetos recomendados como QuickDTO baseados na meta de redução de um usuário por ID (paginado)
+     * @param userId O ID do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK) ou o status HTTP 404 (Not Found).
+     * @see ProjectService#getRecommendedByUserReduceGoalAsQuick(Long, Pageable), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Obtém projetos recomendados como QuickDTO baseados na meta de redução de usuário por ID (paginado)", description = "Obtém projetos recomendados como QuickDTO baseados nos materiais da meta de redução ativa de um usuário por ID com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "404", description = "Usuário não possui meta de redução ativa")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}/quick/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalAsQuickByUserIdPaged(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
+            Pageable pageable) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoalAsQuick(userId, pageable), HttpStatus.OK);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar projetos recomendados baseados na meta de redução do usuário autenticado (QuickDTO)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK)
+     * @see ProjectService#getRecommendedProjectsQuickByUserReduceGoal(String), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Lista projetos recomendados baseados na meta de redução do usuário autenticado (QuickDTO)", description = "Lista projetos recomendados baseados nos materiais da meta de redução ativa do usuário autenticado e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 5
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/quick-projects")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsQuickByReduceGoal(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedProjectsQuickByUserReduceGoal(email), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar projetos recomendados baseados na meta de redução do usuário autenticado (QuickDTO, paginado)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK)
+     * @see ProjectService#getRecommendedProjectsQuickByUserReduceGoal(String, Pageable), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Lista projetos recomendados baseados na meta de redução do usuário autenticado (QuickDTO, paginado)", description = "Lista projetos recomendados baseados nos materiais da meta de redução ativa do usuário autenticado com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/quick-projects/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsQuickByReduceGoalPaged(Authentication authentication, Pageable pageable) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedProjectsQuickByUserReduceGoal(email, pageable), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar projetos recomendados baseados na meta de redução de usuário por ID (QuickDTO)
+     * @param userId ID do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK)
+     * @see ProjectService#getRecommendedProjectsQuickByUserReduceGoal(Long), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Lista projetos recomendados baseados na meta de redução de usuário por ID (QuickDTO)", description = "Lista projetos recomendados baseados nos materiais da meta de redução ativa de um usuário por ID e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = QuickProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "materials": [
+                                {
+                                    "id": 1,
+                                    "material": "PLASTIC",
+                                    "quantity": 5
+                                }
+                            ]
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}/quick-projects")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsQuickByReduceGoalByUserId(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedProjectsQuickByUserReduceGoal(userId), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar projetos recomendados baseados na meta de redução de usuário por ID (QuickDTO, paginado)
+     * @param userId ID do usuário
+     * @param pageable Configurações de paginação
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK)
+     * @see ProjectService#getRecommendedProjectsQuickByUserReduceGoal(Long, Pageable), Page<QuickProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Lista projetos recomendados baseados na meta de redução de usuário por ID (QuickDTO, paginado)", description = "Lista projetos recomendados baseados nos materiais da meta de redução ativa de um usuário por ID com paginação e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user/{userId}/quick-projects/paged")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsQuickByReduceGoalByUserIdPaged(
+            @PathVariable @Parameter(required = true, example = "1") @NotNull @Positive Long userId,
+            Pageable pageable) {
+        try {
+            return new ResponseEntity<>(service.getRecommendedProjectsQuickByUserReduceGoal(userId, pageable), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método GET para listar projetos recomendados baseados na meta de redução do usuário autenticado (sem restrição DEV)
+     * @param authentication Objeto de autenticação para extrair o email do usuário
+     * @return Um ResponseEntity contendo a página de projetos recomendados e o status HTTP 200 (OK)
+     * @see ProjectService#getRecommendedByUserReduceGoal(String), Page<ProjectResponseDTO>
+     */
+    @Tag(name = "Projetos", description = "Recurso para gerenciamento de projetos")
+    @Operation(summary = "Lista projetos recomendados baseados na meta de redução do usuário autenticado", description = "Lista projetos recomendados baseados nos materiais da meta de redução ativa do usuário autenticado e retorna uma página com o status HTTP 200")
+    @ApiResponse(responseCode = "200", description = "Projetos recomendados obtidos com sucesso",
+            content = @Content(schema = @Schema(implementation = ProjectResponseDTO.class),
+            examples = @ExampleObject(value = """
+                    [
+                        {
+                            "id": 1,
+                            "title": "Vaso de Garrafa PET",
+                            "description": "Transforme garrafas plásticas em vasos decorativos",
+                            "difficulty": "FÁCIL",
+                            "estimatedTime": 30
+                        }
+                    ]
+                    """)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    @SecurityRequirement(name = "Bearer")
+    @GetMapping("/recommended/reduce-goal/user-auth")
+    public ResponseEntity<Page<QuickProjectResponseDTO>> getRecommendedProjectsByReduceGoalByUserAuth(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return new ResponseEntity<>(service.getRecommendedByUserReduceGoal(email), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

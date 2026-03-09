@@ -27,11 +27,11 @@ public class JWTUtils {
     public String generateToken(UserDetails userDetails) {
         Algorithm algorithm = Algorithm.HMAC256(PASSWORD);
 
-        List<String> roles = userDetails.getAuthorities().stream()
+        List<String> roles = userDetails.getAuthorities() != null
+                ? userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        System.out.println(roles);
+                .collect(Collectors.toList())
+                : List.of();
 
         return JWT.create()
                 .withIssuer(issuer) // Emissor do token
